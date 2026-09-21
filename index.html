@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="Proverbs"/>
 <meta name="theme-color" content="#000"/>
 <title>Proverbs of the World</title>
 <style>
@@ -17,6 +16,7 @@ header{text-align:center;padding:4px 2px 6px}
 .brand{font-size:17px;letter-spacing:.12em;text-transform:uppercase}
 .stats{margin-top:6px;font-family:-apple-system,sans-serif;font-size:17px;color:var(--muted)}
 .stats b{color:#fff}
+.mute{margin-left:8px;border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;padding:4px 10px;font-size:13px}
 .space{height:min(32vh,250px);margin:0 -12px 2px;background:#000}
 #globe{width:100%;height:min(32vh,250px);display:block}
 .stage{border:1px solid var(--line);border-radius:22px;padding:12px}
@@ -60,7 +60,7 @@ h2.q{font-size:21px;line-height:1.35;margin:12px 0;font-family:-apple-system,san
 <div class="fact"><span>Capital</span><b id="pageCap"></b></div>
 </div>
 <div class="wrap">
-<header><div class="brand">Proverbs of the World</div><div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b></div></header>
+<header><div class="brand">Proverbs of the World</div><div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b> · <button type="button" id="muteBtn" class="mute">Sound on</button></div></header>
 <div class="space"><canvas id="globe" width="720" height="640"></canvas></div>
 <div class="stage">
 <div class="country-row" id="countryRow">
@@ -75,5 +75,5 @@ h2.q{font-size:21px;line-height:1.35;margin:12px 0;font-family:-apple-system,san
 <button class="btn" id="spinBtn">Spin the world</button>
 </div></div>
 <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
-<script src="game.js?v=17"></script>
+<script src="game.js?v=18"></script>
 </body></html>
