@@ -5,16 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Proverbs"/>
-<meta name="theme-color" content="#000000"/>
+<meta name="theme-color" content="#000"/>
 <title>Proverbs Quiz</title>
 <style>
-body{margin:0;background:#000;color:#fff;font-family:-apple-system,sans-serif;padding:40px 20px;text-align:center}
-a{display:inline-block;margin-top:24px;background:#e6c56a;color:#111;padding:14px 22px;border-radius:999px;text-decoration:none;font-weight:700}
+body{margin:0;background:#000;color:#f4efe6;font-family:Georgia,serif;padding:max(12px,env(safe-area-inset-top)) 16px 20px}
+.brand{text-align:center;letter-spacing:.18em;font-size:13px;text-transform:uppercase}
+.stats{text-align:center;color:#9eb0c4;font-family:-apple-system,sans-serif;font-size:13px;margin:6px 0 14px}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row img{width:52px;height:34px;object-fit:cover;border-radius:6px;background:#123}
+h1{font-size:22px;margin:0}
+.q{font-family:-apple-system,sans-serif;font-size:13px;margin:8px 0}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0e1622;color:#fff;font:inherit}
+.opt.correct{border-color:#43d39a;background:rgba(67,211,154,.16)}
+.opt.wrong{border-color:#ef6673;background:rgba(239,102,115,.14)}
+.btn{width:100%;border:0;border-radius:999px;padding:14px;font-weight:800;background:#e6c56a;margin-top:12px}
+.msg{min-height:20px;color:#9eb0c4;font-family:-apple-system,sans-serif;font-size:13px}
 </style>
 </head>
 <body>
-<h1>Proverbs Quiz</h1>
-<p>If you see this page, GitHub Pages is on.</p>
-<p>Open this same address in the Safari app (blue compass), then Share → Add to Home Screen.</p>
+<div class="brand">Proverbs of the World</div>
+<div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b></div>
+<div class="row"><img id="flag" alt=""/><h1 id="name">Proverbs Quiz</h1></div>
+<p class="q" id="q" hidden>Which of these four proverbs is from this country?</p>
+<div id="opts"></div>
+<p class="msg" id="msg">Loading…</p>
+<button class="btn" id="go">Spin the world</button>
+<script>
+const FLAG=iso=>`https://flagcdn.com/w160/${iso.toLowerCase()}.png`;
+let DATA={countries:[]},score=0,streak=0,locked=false,cur=null;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
+function others(name,n){
+  const pool=[];
+  for(const c of DATA.countries){ if(c.name===name) continue; for(const p of c.proverbs) pool.push({text:p,from:c.name,iso:c.iso}); }
+  const out=[],u=new Set();
+  while(out.length<n && pool.length){const it=pick(pool); if(u.has(it.text)) continue; u.add(it.text); out.push(it);}
+  return out;
+}
+function round(){
+  if(!DATA.countries.length){document.getElementById('msg').textContent='Could not load proverbs.';return;}
+  locked=false;
+  const c=pick(DATA.countries);
+  const correct=pick(c.proverbs);
+  const ch=shuffle([{text:correct,ok:true,from:c.name,iso:c.iso},...others(c.name,3)]);
+  cur={correct,c};
+  document.getElementById('name').textContent=c.name;
+  document.getElementById('flag').src=FLAG(c.iso);
+  document.getElementById('q').hidden=false;
+  document.getElementById('msg').textContent='';
+  document.getElementById('go').textContent='Next country';
+  const box=document.getElementById('opts'); box.innerHTML='';
+  ch.forEach(opt=>{
+    const b=document.createElement('button'); b.className='opt'; b.textContent=opt.text;
+    b.onclick=()=>{
+      if(locked) return; locked=true;
+      [...box.children].forEach(el=>{ if(el.textContent===cur.correct) el.classList.add('correct'); });
+      if(opt.ok){ b.classList.add('correct'); score+=10; streak++; document.getElementById('msg').textContent='Correct.'; }
+      else { b.classList.add('wrong'); streak=0; document.getElementById('msg').textContent='Not this one. That proverb is from '+opt.from+'.'; }
+      document.getElementById('score').textContent=score;
+      document.getElementById('streak').textContent=streak;
+    };
+    box.appendChild(b);
+  });
+}
+document.getElementById('go').onclick=round;
+fetch('proverbs.json').then(r=>r.json()).then(j=>{DATA=j; document.getElementById('msg').textContent='Tap the button to start.';}).catch(()=>{document.getElementById('msg').textContent='Missing proverbs.json';});
+</script>
 </body>
 </html>
