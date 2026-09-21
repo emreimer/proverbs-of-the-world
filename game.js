@@ -157,12 +157,12 @@ function answer(btn, ch){
 }
 function openCountryPage(){
   if (!current || !current.country) return;
-  const c = current.country; const info = INFO[c.iso] || { capital: '—', population: '—', language: '—' };
+  const c = current.country; const info = INFO[c.iso] || { capital: '\u2014', population: '\u2014', language: '\u2014' };
   document.getElementById('pageFlag').src = FLAGL(c.iso);
   document.getElementById('pageName').textContent = c.name;
-  document.getElementById('pageCap').textContent = info.capital || info[0] || '—';
-  document.getElementById('pagePop').textContent = info.population || info[1] || '—';
-  document.getElementById('pageLang').textContent = info.language || info[2] || '—';
+  document.getElementById('pageCap').textContent = info.capital || info[0] || '\u2014';
+  document.getElementById('pagePop').textContent = info.population || info[1] || '\u2014';
+  document.getElementById('pageLang').textContent = info.language || info[2] || '\u2014';
   document.getElementById('page').classList.add('open');
   const cvs = document.getElementById('pageGlobe');
   if (cvs && typeof THREE !== 'undefined'){
@@ -222,5 +222,7 @@ Promise.all([
       {name:'Mexico',iso:'MX',proverbs:['Better late than never.']},
       {name:'Bolivia',iso:'BO',proverbs:['It is better to eat bread with love than fowl with grief.']}
     ]};
+    CENT = {JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2],BR:[-10,-52],EG:[26,30],IN:[21,78],DE:[51,10],MX:[24,-102],BO:[-17,-65]};
+    ISO3 = {JP:'JPN',TR:'TUR',US:'USA',GB:'GBR',BR:'BRA',EG:'EGY',IN:'IND',DE:'DEU',MX:'MEX',BO:'BOL'};
   })
   .finally(() => initGlobe());
