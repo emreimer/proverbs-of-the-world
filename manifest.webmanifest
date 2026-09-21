@@ -1,0 +1,8 @@
+{
+  "name": "Proverbs of the World",
+  "short_name": "Proverbs",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
