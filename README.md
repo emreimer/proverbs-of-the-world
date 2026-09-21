@@ -1,5 +1,5 @@
-Open on iPhone Safari:
-https://emreimer.github.io/proverbs-of-the-world/
+# Proverbs of the World
 
-Then Share → Add to Home Screen.
-If 404: Settings → Pages → Deploy from branch main.
+Play: https://emreimer.github.io/proverbs-of-the-world/v30.html
+
+If the old page is cached, use the v30 link above (Safari: close the tab first).
