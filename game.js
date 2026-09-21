@@ -19,7 +19,7 @@ const FLAG=i=>'https://flagcdn.com/w40/'+i.toLowerCase()+'.png';
 const FLAGL=i=>'https://flagcdn.com/w160/'+i.toLowerCase()+'.png';
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function others(name){const p=[];for(const c of DATA.countries){if(c.name===name)continue;for(const x of c.proverbs)p.push({text:x,from:c.name,iso:c.iso});}const o=[],u={};while(o.length<3){const x=pick(p);if(!u[x.text]){u[x.text]=1;o.push(x);}}return o;}
+function others(name){const cs=shuffle(DATA.countries.filter(c=>c.name!==name&&c.proverbs&&c.proverbs.length));return cs.slice(0,3).map(c=>({text:pick(c.proverbs),from:c.name,iso:c.iso}));}
 function latLonToVec(lat,lon,r){const p=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;return new THREE.Vector3(-Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)).multiplyScalar(r||1);}
 let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,spinSpeed=0.01,targetSpeed=0.01,hold=false;
 const canvas=document.getElementById('globe');
@@ -54,7 +54,6 @@ function paintCountry(geo){
  paintGroup=g; globeMesh.add(g);
 }
 function aimAt(iso){
- const ll=CENT[iso]||[20,0];
  const code=ISO3[iso];
  if(!code)return;
  fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries/'+code+'.geo.json')
