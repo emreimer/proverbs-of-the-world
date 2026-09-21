@@ -42,25 +42,35 @@ const FALLBACK_INFO = {
   IN:{capital:'New Delhi',population:'1.4 billion',language:'Hindi, English'},
   DE:{capital:'Berlin',population:'84 million',language:'German'},
   MX:{capital:'Mexico City',population:'130 million',language:'Spanish'},
-  BO:{capital:'Sucre',population:'12 million',language:'Spanish, Quechua, Aymara'}
+  BO:{capital:'Sucre',population:'12 million',language:'Spanish, Quechua, Aymara'},
+  IL:{capital:'Jerusalem',population:'10 million',language:'Hebrew'}
 };
-function applyInfo(info){
+const OFFICIAL_LANG = { IL: 'Hebrew' };
+function officialLang(iso, raw){
+  if (OFFICIAL_LANG[iso]) return OFFICIAL_LANG[iso];
+  return raw || '\u2014';
+}
+function applyInfo(info, iso){
   info = info || { capital:'\u2014', population:'\u2014', language:'\u2014' };
   document.getElementById('pageCap').textContent = info.capital || '\u2014';
   document.getElementById('pagePop').textContent = info.population || '\u2014';
-  document.getElementById('pageLang').textContent = info.language || '\u2014';
+  document.getElementById('pageLang').textContent = officialLang(iso || info.iso, info.language);
 }
 function loadInfo(iso){
   const have = INFO[iso];
-  if (have && have.capital && have.capital !== '\u2014') return Promise.resolve(have);
+  if (have && have.capital && have.capital !== '\u2014') {
+    have.language = officialLang(iso, have.language);
+    return Promise.resolve(have);
+  }
   return fetch('https://restcountries.com/v3.1/alpha/' + iso + '?fields=capital,population,languages')
     .then(r => { if (!r.ok) throw 0; return r.json(); })
     .then(d => {
       const langs = d.languages ? Object.values(d.languages) : [];
       const info = {
+        iso,
         capital: (d.capital && d.capital[0]) || '\u2014',
         population: fmtPop(d.population),
-        language: langs.join(', ') || '\u2014'
+        language: officialLang(iso, langs.join(', '))
       };
       INFO[iso] = info;
       return info;
@@ -201,8 +211,8 @@ function openCountryPage(){
   const c = current.country;
   document.getElementById('pageFlag').src = FLAGL(c.iso);
   document.getElementById('pageName').textContent = c.name;
-  applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'\u2026', population:'\u2026', language:'\u2026' });
-  loadInfo(c.iso).then(applyInfo);
+  applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'\u2026', population:'\u2026', language:'\u2026' }, c.iso);
+  loadInfo(c.iso).then(info => applyInfo(info, c.iso));
   document.getElementById('page').classList.add('open');
   const cvs = document.getElementById('pageGlobe');
   if (cvs && typeof THREE !== 'undefined'){
@@ -241,11 +251,12 @@ document.getElementById('backBtn').onclick = () => document.getElementById('page
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
 Promise.all([
-  fetch('c0.json?v=31'), fetch('c1.json?v=31'), fetch('c2.json?v=31'), fetch('c3.json?v=31'), fetch('meta.json?v=31')
+  fetch('c0.json?v=32'), fetch('c1.json?v=32'), fetch('c2.json?v=32'), fetch('c3.json?v=32'), fetch('meta.json?v=32')
 ].map(p => p.then(r => { if (!r.ok) throw 0; return r.json(); })))
   .then(([a,b,c,d,m]) => {
     DATA = { countries: [].concat(a,b,c,d) };
     INFO = Object.assign({}, FALLBACK_INFO, m.info || {});
+    if (INFO.IL) INFO.IL.language = 'Hebrew';
     CENT = m.cent || {};
     ISO3 = m.iso3 || {};
   })
