@@ -21,7 +21,13 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function others(name){const cs=shuffle(DATA.countries.filter(c=>c.name!==name&&c.proverbs&&c.proverbs.length));return cs.slice(0,3).map(c=>({text:pick(c.proverbs),from:c.name,iso:c.iso}));}
 function latLonToVec(lat,lon,r){const p=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;return new THREE.Vector3(-Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)).multiplyScalar(r||1);}
-let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,pendingGeo=null,spinSpeed=0.01,targetSpeed=0.01,hold=false;
+function destRot(iso){
+ const ll=CENT[iso]||[20,0];
+ const v=latLonToVec(ll[0],ll[1],1);
+ const q=new THREE.Quaternion().setFromUnitVectors(v.clone().normalize(), new THREE.Vector3(0,0,1));
+ return new THREE.Euler().setFromQuaternion(q,'YXZ');
+}
+let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,pendingGeo=null,spinSpeed=0.01,targetSpeed=0.01,hold=false,travel=null;
 let pageR=null,pageS=null,pageC=null,pageM=null,pageG=null;
 const canvas=document.getElementById('globe');
 function initGlobe(){
@@ -40,7 +46,29 @@ function initGlobe(){
  const sun=new THREE.DirectionalLight(0xfff4dd,2);sun.position.set(5,2,3);scene.add(sun);
  function resize(){const w=canvas.clientWidth||320,h=canvas.clientHeight||280;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
  resize(); addEventListener('resize',resize);
- (function loop(){requestAnimationFrame(loop);spinSpeed+=(targetSpeed-spinSpeed)*0.06;if(globeMesh&&!hold)globeMesh.rotation.y+=spinSpeed;if(renderer)renderer.render(scene,camera); if(pageR&&document.getElementById('page').classList.contains('open')){const cvs=document.getElementById('pageGlobe'); if(cvs){const w=cvs.clientWidth,h=cvs.clientHeight||220;pageR.setSize(w,h,false);pageC.aspect=w/Math.max(h,1);pageC.updateProjectionMatrix();pageR.render(pageS,pageC);}}})();
+ (function loop(){
+  requestAnimationFrame(loop);
+  spinSpeed+=(targetSpeed-spinSpeed)*0.06;
+  if(globeMesh){
+   if(travel){
+    const u=Math.min(1,(performance.now()-travel.t0)/travel.dur);
+    const e=u<0.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+    globeMesh.rotation.x=travel.fromX+(travel.toX-travel.fromX)*e;
+    globeMesh.rotation.y=travel.fromY+(travel.toY-travel.fromY)*e;
+    globeMesh.rotation.z=0;
+    if(u>=1){ globeMesh.rotation.x=travel.toX; globeMesh.rotation.y=travel.toY; travel=null; hold=true; }
+   } else if(!hold){
+    globeMesh.rotation.x+=(0-globeMesh.rotation.x)*0.08;
+    globeMesh.rotation.y+=spinSpeed;
+    globeMesh.rotation.z=0;
+   }
+  }
+  if(renderer) renderer.render(scene,camera);
+  if(pageR&&document.getElementById('page').classList.contains('open')){
+   const cvs=document.getElementById('pageGlobe');
+   if(cvs){const w=cvs.clientWidth,h=cvs.clientHeight||220;pageR.setSize(w,h,false);pageC.aspect=w/Math.max(h,1);pageC.updateProjectionMatrix();pageR.render(pageS,pageC);}
+  }
+ })();
 }
 function paintCountry(geo){
  if(!globeMesh){pendingGeo=geo;return;}
@@ -58,14 +86,26 @@ function paintCountry(geo){
  }
  paintGroup=g; globeMesh.add(g);
 }
+function lookCountry(iso, mesh){
+ if(!mesh) return;
+ const e=destRot(iso);
+ mesh.rotation.set(e.x,e.y,0);
+}
 function aimAt(iso){
+ if(globeMesh){
+  const e=destRot(iso);
+  let dy=e.y-globeMesh.rotation.y;
+  dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+  travel={fromX:globeMesh.rotation.x,fromY:globeMesh.rotation.y,toX:e.x,toY:globeMesh.rotation.y+dy,t0:performance.now(),dur:1400};
+  targetSpeed=0; spinSpeed=0; hold=false;
+ }
  const code=ISO3[iso];
  if(!code)return;
  fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries/'+code+'.geo.json')
   .then(r=>{if(!r.ok)throw 0;return r.json();}).then(paintCountry).catch(()=>{});
 }
 function startSpin(){
- hold=false;targetSpeed=0.22;locked=true;
+ hold=false; travel=null; targetSpeed=0.22; locked=true;
  document.getElementById('opts').innerHTML='';
  document.getElementById('result').textContent='';
  document.getElementById('hint').textContent='Finding a country';
@@ -75,10 +115,9 @@ function startSpin(){
  document.getElementById('spinBtn').disabled=true;
  if(paintGroup&&globeMesh){globeMesh.remove(paintGroup);paintGroup=null;}
  pendingGeo=null;
- setTimeout(()=>{targetSpeed=0.02;setTimeout(showRound,400);},1400);
+ setTimeout(()=>{targetSpeed=0.02;setTimeout(showRound,500);},1300);
 }
 function showRound(){
- targetSpeed=0;hold=true;
  const c=pick(DATA.countries); const correct=pick(c.proverbs);
  const ch=shuffle([{text:correct,ok:true,from:c.name,iso:c.iso},...others(c.name)]);
  current={country:c,correct}; aimAt(c.iso);
@@ -126,11 +165,7 @@ function openCountryPage(){
    pageS.add(pageM);
    new THREE.TextureLoader().load(EARTH,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pageM.material=new THREE.MeshPhongMaterial({map:tex,shininess:16});});
   }
-  const ll=CENT[c.iso]||[20,0];
-  const v=latLonToVec(ll[0],ll[1],1);
-  const q=new THREE.Quaternion().setFromUnitVectors(v.clone().normalize(), new THREE.Vector3(0,0,1));
-  const e=new THREE.Euler().setFromQuaternion(q,'YXZ');
-  pageM.rotation.set(e.x,e.y,0);
+  lookCountry(c.iso, pageM);
   if(pageG){pageM.remove(pageG);pageG=null;}
   const code=ISO3[c.iso];
   if(code) fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries/'+code+'.geo.json').then(r=>{if(!r.ok)throw 0;return r.json();}).then(geo=>{const g=new THREE.Group();const stroke=new THREE.LineBasicMaterial({color:0xffd45a});const feats=geo.type==='FeatureCollection'?geo.features:[geo];for(const f of feats){if(!f||!f.geometry)continue;const polys=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[];for(const poly of polys){const ring=poly&&poly[0];if(!ring||ring.length<4)continue;g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ring.map(([lo,la])=>latLonToVec(la,lo,1.016))),stroke));}}pageG=g;pageM.add(g);}).catch(()=>{});
