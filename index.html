@@ -1,69 +1,55 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="Proverbs"/>
-<meta name="theme-color" content="#000"/>
-<title>Proverbs Quiz</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Proverbs" />
+<meta name="theme-color" content="#000000" />
+<title>Proverbs of the World</title>
 <style>
-body{margin:0;background:#000;color:#f4efe6;font-family:Georgia,serif;padding:max(12px,env(safe-area-inset-top)) 16px 24px}
-.brand{text-align:center;letter-spacing:.18em;font-size:13px;text-transform:uppercase}
-.stats{text-align:center;color:#9eb0c4;font-family:-apple-system,sans-serif;margin:8px 0 16px}
-.row{display:flex;align-items:center;gap:10px}
-img.flag{width:52px;height:34px;object-fit:cover;border-radius:6px;background:#222}
-h1{font-size:22px;margin:0}
-.q{font-family:-apple-system,sans-serif;font-size:13px}
-.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border-radius:14px;border:1px solid #222;background:#0e1622;color:#fff;font:inherit}
-.ok{border-color:#43d39a}
-.bad{border-color:#ef6673}
-.btn{width:100%;border:0;border-radius:999px;padding:14px;font-weight:800;background:#e6c56a;margin-top:14px}
-.msg{color:#9eb0c4;font-family:-apple-system,sans-serif;min-height:18px}
-</style></head><body>
-<div class="brand">Proverbs of the World</div>
-<div class="stats">Score <b id="s">0</b> · Streak <b id="k">0</b></div>
-<div class="row"><img class="flag" id="f" alt=""/><h1 id="n">Proverbs Quiz</h1></div>
-<p class="q" id="q" hidden>Which of these four proverbs is from this country?</p>
-<div id="o"></div>
-<p class="msg" id="m">Tap the button to start.</p>
-<button class="btn" id="b">Spin the world</button>
-<script>
-const DATA={countries:[
-{name:"Afghanistan",iso:"AF",proverbs:["A little water is a sea to an ant.","A wise enemy is better than a foolish friend.","Patience is bitter, but it has a sweet fruit.","One flower does not bring spring."]},
-{name:"Albania",iso:"AL",proverbs:["A day without work can yield a night without sleep.","He who hesitates, regrets.","Patience is the key to paradise.","You cannot hunt with a tied dog."]},
-{name:"Brazil",iso:"BR",proverbs:["A sleeping fox finds no meat.","Goodwill makes the road shorter.","Never put off till tomorrow what you can do today.","You cannot cover up the sun with a sieve."]},
-{name:"Egypt",iso:"EG",proverbs:["A beautiful thing is never perfect.","Friendship doubles joy and halves grief.","What comes easily is lost easily.","The opinion of the intelligent is better than the certainty of the ignorant."]},
-{name:"Germany",iso:"DE",proverbs:["All beginnings are hard.","He who rests grows rusty.","Practice is what makes a master.","Actions say more than words."]},
-{name:"India",iso:"IN",proverbs:["Learning is a treasure no thief can touch.","Where the needle goes, the thread follows.","Among the blind, the one-eyed man is king.","Don't bargain for fish which are still in the water."]},
-{name:"Japan",iso:"JP",proverbs:["Fall seven times and stand up eight.","The nail that sticks out gets hammered down.","One kind word can warm three winter months.","Vision without action is a daydream."]},
-{name:"Turkey",iso:"TR",proverbs:["A cup of coffee commits one to forty years of friendship.","No matter how far you have gone on the wrong road, turn back.","The dog barks, but the caravan moves on.","Patience is bitter, but its fruit is sweet."]},
-{name:"USA",iso:"US",proverbs:["Actions speak louder than words.","The early bird catches the worm.","If it ain't broke, don't fix it.","Talk is cheap."]},
-{name:"United Kingdom",iso:"GB",proverbs:["A stitch in time saves nine.","Look before you leap.","Every cloud has a silver lining.","Make hay while the sun shines."]}
-]};
-const pick=a=>a[Math.floor(Math.random()*a.length)];
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-let score=0,streak=0,lock=0,ans="";
-function others(name){
- const p=[];for(const c of DATA.countries){if(c.name===name)continue;for(const x of c.proverbs)p.push({t:x,f:c.name});}
- const o=[],u={};while(o.length<3){const x=pick(p);if(!u[x.t]){u[x.t]=1;o.push(x);}}return o;
-}
-document.getElementById("b").onclick=()=>{
- lock=0; const c=pick(DATA.countries); ans=pick(c.proverbs);
- const ch=shuffle([{t:ans,ok:1,f:c.name},...others(c.name).map(x=>({t:x.t,ok:0,f:x.f}))]);
- document.getElementById("n").textContent=c.name;
- document.getElementById("f").src="https://flagcdn.com/w160/"+c.iso.toLowerCase()+".png";
- document.getElementById("q").hidden=false;
- document.getElementById("m").textContent="";
- document.getElementById("b").textContent="Next country";
- const box=document.getElementById("o"); box.innerHTML="";
- ch.forEach(x=>{
-  const b=document.createElement("button"); b.className="opt"; b.textContent=x.t;
-  b.onclick=()=>{ if(lock)return; lock=1;
-   [...box.children].forEach(el=>{if(el.textContent===ans)el.classList.add("ok");});
-   if(x.ok){b.classList.add("ok");score+=10;streak++;document.getElementById("m").textContent="Correct.";}
-   else {b.classList.add("bad");streak=0;document.getElementById("m").textContent="Not this one. That proverb is from "+x.f+".";}
-   document.getElementById("s").textContent=score; document.getElementById("k").textContent=streak;
-  }; box.appendChild(b);
- });
-};
-</script></body></html>
+  :root { --ink:#f4efe6; --muted:#9eb0c4; --gold:#e6c56a; --good:#43d39a; --bad:#ef6673; --line:rgba(255,255,255,.1); }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:#000; color:var(--ink); }
+  body { font-family: Georgia, Palatino, serif; background:#000; padding: max(8px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+  .wrap { max-width:480px; margin:0 auto; }
+  header { text-align:center; padding:4px 2px 6px; }
+  .brand { color:#f4f0e6; font-size:13px; letter-spacing:.18em; text-transform:uppercase; }
+  .stats { margin-top:4px; font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); }
+  .stats b { color:#fff; }
+  .space { height:min(42vh,340px); margin:0 -12px 2px; background:#000; }
+  #globe { width:100%; height:min(42vh,340px); display:block; }
+  .stage { border:1px solid var(--line); border-radius:22px; padding:12px; }
+  .country-row { display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .flag { width:52px; height:34px; object-fit:cover; border-radius:6px; }
+  .cname { margin:0; font-size:22px; }
+  .hint { color:var(--muted); font-size:13px; font-family:-apple-system,sans-serif; }
+  h2.q { font-size:12px; margin:8px 0; font-family:-apple-system,sans-serif; }
+  .opts { display:grid; gap:7px; }
+  .opt { width:100%; text-align:left; color:var(--ink); background:#0e1622; border:1px solid var(--line); border-radius:14px; padding:10px 12px; font:inherit; }
+  .meta { display:none; align-items:center; gap:8px; margin-top:8px; font-size:12px; }
+  .revealed .meta { display:flex; }
+  .opt.correct { border-color:var(--good); }
+  .opt.wrong { border-color:var(--bad); }
+  .btn { width:100%; border:0; border-radius:999px; padding:13px; font-weight:800; background:var(--gold); margin-top:12px; }
+  .page { display:none; position:fixed; inset:0; z-index:20; background:#000; padding:20px; }
+  .page.open { display:block; }
+  .hidden { display:none !important; }
+</style></head>
+<body>
+<div class="page" id="page"><button id="backBtn">Back</button><img id="pageFlag"/><h1 id="pageName"></h1><div id="pagePop"></div><div id="pageLang"></div><div id="pageCap"></div></div>
+<div class="wrap">
+<header><div class="brand">Proverbs of the World</div><div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b></div></header>
+<div class="space"><canvas id="globe" width="720" height="640"></canvas></div>
+<div class="stage">
+<div class="country-row"><img id="flag" class="flag hidden"/><h1 id="country" class="cname">Proverbs Quiz</h1></div>
+<p id="hint" class="hint">Spin to land on a country</p>
+<h2 id="q" class="q hidden">Which of these four proverbs is from this country?</h2>
+<div id="opts" class="opts"></div>
+<p class="result" id="result"></p>
+<button class="btn" id="spinBtn">Spin the world</button>
+</div></div>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+<script src="game.js"></script>
+</body></html>
