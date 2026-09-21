@@ -26,6 +26,47 @@ function destQuat(iso){
   const m = new THREE.Matrix4().makeBasis(xAxis, y2, target);
   return new THREE.Quaternion().setFromRotationMatrix(m).invert();
 }
+function fmtPop(n){
+  if (typeof n !== 'number') return '\u2014';
+  if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + ' billion';
+  if (n >= 1e6) return (n/1e6).toFixed(n >= 1e8 ? 0 : 1).replace(/\.0$/,'') + ' million';
+  return n.toLocaleString('en');
+}
+const FALLBACK_INFO = {
+  JP:{capital:'Tokyo',population:'123 million',language:'Japanese'},
+  TR:{capital:'Ankara',population:'85 million',language:'Turkish'},
+  US:{capital:'Washington, D.C.',population:'340 million',language:'English'},
+  GB:{capital:'London',population:'68 million',language:'English'},
+  BR:{capital:'Brasília',population:'216 million',language:'Portuguese'},
+  EG:{capital:'Cairo',population:'116 million',language:'Arabic'},
+  IN:{capital:'New Delhi',population:'1.4 billion',language:'Hindi, English'},
+  DE:{capital:'Berlin',population:'84 million',language:'German'},
+  MX:{capital:'Mexico City',population:'130 million',language:'Spanish'},
+  BO:{capital:'Sucre',population:'12 million',language:'Spanish, Quechua, Aymara'}
+};
+function applyInfo(info){
+  info = info || { capital:'\u2014', population:'\u2014', language:'\u2014' };
+  document.getElementById('pageCap').textContent = info.capital || '\u2014';
+  document.getElementById('pagePop').textContent = info.population || '\u2014';
+  document.getElementById('pageLang').textContent = info.language || '\u2014';
+}
+function loadInfo(iso){
+  const have = INFO[iso];
+  if (have && have.capital && have.capital !== '\u2014') return Promise.resolve(have);
+  return fetch('https://restcountries.com/v3.1/alpha/' + iso + '?fields=capital,population,languages')
+    .then(r => { if (!r.ok) throw 0; return r.json(); })
+    .then(d => {
+      const langs = d.languages ? Object.values(d.languages) : [];
+      const info = {
+        capital: (d.capital && d.capital[0]) || '\u2014',
+        population: fmtPop(d.population),
+        language: langs.join(', ') || '\u2014'
+      };
+      INFO[iso] = info;
+      return info;
+    })
+    .catch(() => have || FALLBACK_INFO[iso] || { capital:'\u2014', population:'\u2014', language:'\u2014' });
+}
 let score=0, streak=0, locked=false, current=null;
 let scene, camera, renderer, globeMesh, paintGroup, pendingGeo=null;
 let spinSpeed=0.01, targetSpeed=0.01, hold=false, travel=null;
@@ -157,12 +198,11 @@ function answer(btn, ch){
 }
 function openCountryPage(){
   if (!current || !current.country) return;
-  const c = current.country; const info = INFO[c.iso] || { capital: '\u2014', population: '\u2014', language: '\u2014' };
+  const c = current.country;
   document.getElementById('pageFlag').src = FLAGL(c.iso);
   document.getElementById('pageName').textContent = c.name;
-  document.getElementById('pageCap').textContent = info.capital || info[0] || '\u2014';
-  document.getElementById('pagePop').textContent = info.population || info[1] || '\u2014';
-  document.getElementById('pageLang').textContent = info.language || info[2] || '\u2014';
+  applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'\u2026', population:'\u2026', language:'\u2026' });
+  loadInfo(c.iso).then(applyInfo);
   document.getElementById('page').classList.add('open');
   const cvs = document.getElementById('pageGlobe');
   if (cvs && typeof THREE !== 'undefined'){
@@ -201,11 +241,11 @@ document.getElementById('backBtn').onclick = () => document.getElementById('page
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
 Promise.all([
-  fetch('c0.json?v=30'), fetch('c1.json?v=30'), fetch('c2.json?v=30'), fetch('c3.json?v=30'), fetch('meta.json?v=30')
+  fetch('c0.json?v=31'), fetch('c1.json?v=31'), fetch('c2.json?v=31'), fetch('c3.json?v=31'), fetch('meta.json?v=31')
 ].map(p => p.then(r => { if (!r.ok) throw 0; return r.json(); })))
   .then(([a,b,c,d,m]) => {
     DATA = { countries: [].concat(a,b,c,d) };
-    INFO = m.info || {};
+    INFO = Object.assign({}, FALLBACK_INFO, m.info || {});
     CENT = m.cent || {};
     ISO3 = m.iso3 || {};
   })
@@ -222,6 +262,7 @@ Promise.all([
       {name:'Mexico',iso:'MX',proverbs:['Better late than never.']},
       {name:'Bolivia',iso:'BO',proverbs:['It is better to eat bread with love than fowl with grief.']}
     ]};
+    INFO = Object.assign({}, FALLBACK_INFO);
     CENT = {JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2],BR:[-10,-52],EG:[26,30],IN:[21,78],DE:[51,10],MX:[24,-102],BO:[-17,-65]};
     ISO3 = {JP:'JPN',TR:'TUR',US:'USA',GB:'GBR',BR:'BRA',EG:'EGY',IN:'IND',DE:'DEU',MX:'MEX',BO:'BOL'};
   })
