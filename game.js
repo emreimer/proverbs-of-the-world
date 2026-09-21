@@ -22,6 +22,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function others(name){const cs=shuffle(DATA.countries.filter(c=>c.name!==name&&c.proverbs&&c.proverbs.length));return cs.slice(0,3).map(c=>({text:pick(c.proverbs),from:c.name,iso:c.iso}));}
 function latLonToVec(lat,lon,r){const p=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;return new THREE.Vector3(-Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)).multiplyScalar(r||1);}
 let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,pendingGeo=null,spinSpeed=0.01,targetSpeed=0.01,hold=false;
+let pageR=null,pageS=null,pageC=null,pageM=null,pageG=null;
 const canvas=document.getElementById('globe');
 function initGlobe(){
  if(typeof THREE==='undefined')return;
@@ -39,7 +40,7 @@ function initGlobe(){
  const sun=new THREE.DirectionalLight(0xfff4dd,2);sun.position.set(5,2,3);scene.add(sun);
  function resize(){const w=canvas.clientWidth||320,h=canvas.clientHeight||280;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
  resize(); addEventListener('resize',resize);
- (function loop(){requestAnimationFrame(loop);spinSpeed+=(targetSpeed-spinSpeed)*0.06;if(globeMesh&&!hold)globeMesh.rotation.y+=spinSpeed;if(renderer)renderer.render(scene,camera);})();
+ (function loop(){requestAnimationFrame(loop);spinSpeed+=(targetSpeed-spinSpeed)*0.06;if(globeMesh&&!hold)globeMesh.rotation.y+=spinSpeed;if(renderer)renderer.render(scene,camera); if(pageR&&document.getElementById('page').classList.contains('open')){const cvs=document.getElementById('pageGlobe'); if(cvs){const w=cvs.clientWidth,h=cvs.clientHeight||220;pageR.setSize(w,h,false);pageC.aspect=w/Math.max(h,1);pageC.updateProjectionMatrix();pageR.render(pageS,pageC);}}})();
 }
 function paintCountry(geo){
  if(!globeMesh){pendingGeo=geo;return;}
@@ -52,10 +53,7 @@ function paintCountry(geo){
   const polys=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[];
   for(const poly of polys){
    const ring=poly&&poly[0]; if(!ring||ring.length<4)continue;
-   const pts=ring.map(([lo,la])=>latLonToVec(la,lo,1.016));
-   g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),stroke));
-   const pts2=ring.map(([lo,la])=>latLonToVec(la,lo,1.022));
-   g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts2),stroke));
+   g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ring.map(([lo,la])=>latLonToVec(la,lo,1.016))),stroke));
   }
  }
  paintGroup=g; globeMesh.add(g);
@@ -115,11 +113,28 @@ function openCountryPage(){
  document.getElementById('pageCap').textContent=info[0];
  document.getElementById('pagePop').textContent=info[1];
  document.getElementById('pageLang').textContent=info[2];
- const ll=CENT[c.iso]||[20,0]; const lat=ll[0], lon=ll[1];
- const pad=Math.abs(lat)>50?18:12;
- const map=document.getElementById('pageMap');
- if(map) map.src='https://www.openstreetmap.org/export/embed.html?bbox='+(lon-pad)+'%2C'+(lat-pad)+'%2C'+(lon+pad)+'%2C'+(lat+pad)+'&layer=mapnik&marker='+lat+'%2C'+lon;
  document.getElementById('page').classList.add('open');
+ const cvs=document.getElementById('pageGlobe');
+ if(cvs && typeof THREE!=='undefined'){
+  if(!pageR){
+   pageS=new THREE.Scene();
+   pageC=new THREE.PerspectiveCamera(32,1,0.1,80); pageC.position.set(0,0,3.15);
+   pageR=new THREE.WebGLRenderer({canvas:cvs,antialias:true}); pageR.setClearColor(0x000000,1);
+   pageS.add(new THREE.AmbientLight(0x445566,.8));
+   const sun=new THREE.DirectionalLight(0xfff4dd,2); sun.position.set(5,2,3); pageS.add(sun);
+   pageM=new THREE.Mesh(new THREE.SphereGeometry(1,64,64), new THREE.MeshPhongMaterial({color:0x1b3a5a}));
+   pageS.add(pageM);
+   new THREE.TextureLoader().load(EARTH,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pageM.material=new THREE.MeshPhongMaterial({map:tex,shininess:16});});
+  }
+  const ll=CENT[c.iso]||[20,0];
+  const v=latLonToVec(ll[0],ll[1],1);
+  const q=new THREE.Quaternion().setFromUnitVectors(v.clone().normalize(), new THREE.Vector3(0,0,1));
+  const e=new THREE.Euler().setFromQuaternion(q,'YXZ');
+  pageM.rotation.set(e.x,e.y,0);
+  if(pageG){pageM.remove(pageG);pageG=null;}
+  const code=ISO3[c.iso];
+  if(code) fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries/'+code+'.geo.json').then(r=>{if(!r.ok)throw 0;return r.json();}).then(geo=>{const g=new THREE.Group();const stroke=new THREE.LineBasicMaterial({color:0xffd45a});const feats=geo.type==='FeatureCollection'?geo.features:[geo];for(const f of feats){if(!f||!f.geometry)continue;const polys=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[];for(const poly of polys){const ring=poly&&poly[0];if(!ring||ring.length<4)continue;g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ring.map(([lo,la])=>latLonToVec(la,lo,1.016))),stroke));}}pageG=g;pageM.add(g);}).catch(()=>{});
+ }
 }
 document.getElementById('spinBtn').onclick=startSpin;
 document.getElementById('backBtn').onclick=()=>document.getElementById('page').classList.remove('open');
