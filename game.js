@@ -1,5 +1,6 @@
 let DATA={countries:[]};
 const INFO={AF:['Kabul','43 million','Dari, Pashto'],AL:['Tirana','2.8 million','Albanian'],BR:['Brasilia','216 million','Portuguese'],EG:['Cairo','116 million','Arabic'],DE:['Berlin','84 million','German'],IN:['New Delhi','1.44 billion','Hindi, English'],JP:['Tokyo','123 million','Japanese'],TR:['Ankara','85 million','Turkish'],US:['Washington, D.C.','340 million','English'],GB:['London','68 million','English']};
+const CENT={AF:[33,66],AL:[41,20],BR:[-10,-52],EG:[26,30],DE:[51,10],IN:[21,78],JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2]};
 const ISO3={AF:'AFG',AL:'ALB',BR:'BRA',EG:'EGY',DE:'DEU',IN:'IND',JP:'JPN',TR:'TUR',US:'USA',GB:'GBR'};
 const FALL={countries:[
 {name:'Afghanistan',iso:'AF',proverbs:['A little water is a sea to an ant.','A wise enemy is better than a foolish friend.','Patience is bitter, but it has a sweet fruit.','One flower does not bring spring.']},
@@ -114,6 +115,10 @@ function openCountryPage(){
  document.getElementById('pageCap').textContent=info[0];
  document.getElementById('pagePop').textContent=info[1];
  document.getElementById('pageLang').textContent=info[2];
+ const ll=CENT[c.iso]||[20,0]; const lat=ll[0], lon=ll[1];
+ const pad=Math.abs(lat)>50?18:12;
+ const map=document.getElementById('pageMap');
+ if(map) map.src='https://www.openstreetmap.org/export/embed.html?bbox='+(lon-pad)+'%2C'+(lat-pad)+'%2C'+(lon+pad)+'%2C'+(lat+pad)+'&layer=mapnik&marker='+lat+'%2C'+lon;
  document.getElementById('page').classList.add('open');
 }
 document.getElementById('spinBtn').onclick=startSpin;
