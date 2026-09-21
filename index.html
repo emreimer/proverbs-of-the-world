@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -8,68 +7,63 @@
 <meta name="theme-color" content="#000"/>
 <title>Proverbs Quiz</title>
 <style>
-body{margin:0;background:#000;color:#f4efe6;font-family:Georgia,serif;padding:max(12px,env(safe-area-inset-top)) 16px 20px}
+body{margin:0;background:#000;color:#f4efe6;font-family:Georgia,serif;padding:max(12px,env(safe-area-inset-top)) 16px 24px}
 .brand{text-align:center;letter-spacing:.18em;font-size:13px;text-transform:uppercase}
-.stats{text-align:center;color:#9eb0c4;font-family:-apple-system,sans-serif;font-size:13px;margin:6px 0 14px}
-.row{display:flex;align-items:center;gap:10px;margin:10px 0}
-.row img{width:52px;height:34px;object-fit:cover;border-radius:6px;background:#123}
+.stats{text-align:center;color:#9eb0c4;font-family:-apple-system,sans-serif;margin:8px 0 16px}
+.row{display:flex;align-items:center;gap:10px}
+img.flag{width:52px;height:34px;object-fit:cover;border-radius:6px;background:#222}
 h1{font-size:22px;margin:0}
-.q{font-family:-apple-system,sans-serif;font-size:13px;margin:8px 0}
-.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0e1622;color:#fff;font:inherit}
-.opt.correct{border-color:#43d39a;background:rgba(67,211,154,.16)}
-.opt.wrong{border-color:#ef6673;background:rgba(239,102,115,.14)}
-.btn{width:100%;border:0;border-radius:999px;padding:14px;font-weight:800;background:#e6c56a;margin-top:12px}
-.msg{min-height:20px;color:#9eb0c4;font-family:-apple-system,sans-serif;font-size:13px}
-</style>
-</head>
-<body>
+.q{font-family:-apple-system,sans-serif;font-size:13px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border-radius:14px;border:1px solid #222;background:#0e1622;color:#fff;font:inherit}
+.ok{border-color:#43d39a}
+.bad{border-color:#ef6673}
+.btn{width:100%;border:0;border-radius:999px;padding:14px;font-weight:800;background:#e6c56a;margin-top:14px}
+.msg{color:#9eb0c4;font-family:-apple-system,sans-serif;min-height:18px}
+</style></head><body>
 <div class="brand">Proverbs of the World</div>
-<div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b></div>
-<div class="row"><img id="flag" alt=""/><h1 id="name">Proverbs Quiz</h1></div>
+<div class="stats">Score <b id="s">0</b> · Streak <b id="k">0</b></div>
+<div class="row"><img class="flag" id="f" alt=""/><h1 id="n">Proverbs Quiz</h1></div>
 <p class="q" id="q" hidden>Which of these four proverbs is from this country?</p>
-<div id="opts"></div>
-<p class="msg" id="msg">Loading…</p>
-<button class="btn" id="go">Spin the world</button>
+<div id="o"></div>
+<p class="msg" id="m">Tap the button to start.</p>
+<button class="btn" id="b">Spin the world</button>
 <script>
-const FLAG=iso=>`https://flagcdn.com/w160/${iso.toLowerCase()}.png`;
-let DATA={countries:[]},score=0,streak=0,locked=false,cur=null;
+const DATA={countries:[
+{name:"Afghanistan",iso:"AF",proverbs:["A little water is a sea to an ant.","A wise enemy is better than a foolish friend.","Patience is bitter, but it has a sweet fruit.","One flower does not bring spring."]},
+{name:"Albania",iso:"AL",proverbs:["A day without work can yield a night without sleep.","He who hesitates, regrets.","Patience is the key to paradise.","You cannot hunt with a tied dog."]},
+{name:"Brazil",iso:"BR",proverbs:["A sleeping fox finds no meat.","Goodwill makes the road shorter.","Never put off till tomorrow what you can do today.","You cannot cover up the sun with a sieve."]},
+{name:"Egypt",iso:"EG",proverbs:["A beautiful thing is never perfect.","Friendship doubles joy and halves grief.","What comes easily is lost easily.","The opinion of the intelligent is better than the certainty of the ignorant."]},
+{name:"Germany",iso:"DE",proverbs:["All beginnings are hard.","He who rests grows rusty.","Practice is what makes a master.","Actions say more than words."]},
+{name:"India",iso:"IN",proverbs:["Learning is a treasure no thief can touch.","Where the needle goes, the thread follows.","Among the blind, the one-eyed man is king.","Don't bargain for fish which are still in the water."]},
+{name:"Japan",iso:"JP",proverbs:["Fall seven times and stand up eight.","The nail that sticks out gets hammered down.","One kind word can warm three winter months.","Vision without action is a daydream."]},
+{name:"Turkey",iso:"TR",proverbs:["A cup of coffee commits one to forty years of friendship.","No matter how far you have gone on the wrong road, turn back.","The dog barks, but the caravan moves on.","Patience is bitter, but its fruit is sweet."]},
+{name:"USA",iso:"US",proverbs:["Actions speak louder than words.","The early bird catches the worm.","If it ain't broke, don't fix it.","Talk is cheap."]},
+{name:"United Kingdom",iso:"GB",proverbs:["A stitch in time saves nine.","Look before you leap.","Every cloud has a silver lining.","Make hay while the sun shines."]}
+]};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
-function others(name,n){
-  const pool=[];
-  for(const c of DATA.countries){ if(c.name===name) continue; for(const p of c.proverbs) pool.push({text:p,from:c.name,iso:c.iso}); }
-  const out=[],u=new Set();
-  while(out.length<n && pool.length){const it=pick(pool); if(u.has(it.text)) continue; u.add(it.text); out.push(it);}
-  return out;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let score=0,streak=0,lock=0,ans="";
+function others(name){
+ const p=[];for(const c of DATA.countries){if(c.name===name)continue;for(const x of c.proverbs)p.push({t:x,f:c.name});}
+ const o=[],u={};while(o.length<3){const x=pick(p);if(!u[x.t]){u[x.t]=1;o.push(x);}}return o;
 }
-function round(){
-  if(!DATA.countries.length){document.getElementById('msg').textContent='Could not load proverbs.';return;}
-  locked=false;
-  const c=pick(DATA.countries);
-  const correct=pick(c.proverbs);
-  const ch=shuffle([{text:correct,ok:true,from:c.name,iso:c.iso},...others(c.name,3)]);
-  cur={correct,c};
-  document.getElementById('name').textContent=c.name;
-  document.getElementById('flag').src=FLAG(c.iso);
-  document.getElementById('q').hidden=false;
-  document.getElementById('msg').textContent='';
-  document.getElementById('go').textContent='Next country';
-  const box=document.getElementById('opts'); box.innerHTML='';
-  ch.forEach(opt=>{
-    const b=document.createElement('button'); b.className='opt'; b.textContent=opt.text;
-    b.onclick=()=>{
-      if(locked) return; locked=true;
-      [...box.children].forEach(el=>{ if(el.textContent===cur.correct) el.classList.add('correct'); });
-      if(opt.ok){ b.classList.add('correct'); score+=10; streak++; document.getElementById('msg').textContent='Correct.'; }
-      else { b.classList.add('wrong'); streak=0; document.getElementById('msg').textContent='Not this one. That proverb is from '+opt.from+'.'; }
-      document.getElementById('score').textContent=score;
-      document.getElementById('streak').textContent=streak;
-    };
-    box.appendChild(b);
-  });
-}
-document.getElementById('go').onclick=round;
-fetch('proverbs.json').then(r=>r.json()).then(j=>{DATA=j; document.getElementById('msg').textContent='Tap the button to start.';}).catch(()=>{document.getElementById('msg').textContent='Missing proverbs.json';});
-</script>
-</body>
-</html>
+document.getElementById("b").onclick=()=>{
+ lock=0; const c=pick(DATA.countries); ans=pick(c.proverbs);
+ const ch=shuffle([{t:ans,ok:1,f:c.name},...others(c.name).map(x=>({t:x.t,ok:0,f:x.f}))]);
+ document.getElementById("n").textContent=c.name;
+ document.getElementById("f").src="https://flagcdn.com/w160/"+c.iso.toLowerCase()+".png";
+ document.getElementById("q").hidden=false;
+ document.getElementById("m").textContent="";
+ document.getElementById("b").textContent="Next country";
+ const box=document.getElementById("o"); box.innerHTML="";
+ ch.forEach(x=>{
+  const b=document.createElement("button"); b.className="opt"; b.textContent=x.t;
+  b.onclick=()=>{ if(lock)return; lock=1;
+   [...box.children].forEach(el=>{if(el.textContent===ans)el.classList.add("ok");});
+   if(x.ok){b.classList.add("ok");score+=10;streak++;document.getElementById("m").textContent="Correct.";}
+   else {b.classList.add("bad");streak=0;document.getElementById("m").textContent="Not this one. That proverb is from "+x.f+".";}
+   document.getElementById("s").textContent=score; document.getElementById("k").textContent=streak;
+  }; box.appendChild(b);
+ });
+};
+</script></body></html>
