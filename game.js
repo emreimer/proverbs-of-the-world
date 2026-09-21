@@ -1,6 +1,5 @@
 let DATA={countries:[]};
 const INFO={AF:['Kabul','43 million','Dari, Pashto'],AL:['Tirana','2.8 million','Albanian'],BR:['Brasilia','216 million','Portuguese'],EG:['Cairo','116 million','Arabic'],DE:['Berlin','84 million','German'],IN:['New Delhi','1.44 billion','Hindi, English'],JP:['Tokyo','123 million','Japanese'],TR:['Ankara','85 million','Turkish'],US:['Washington, D.C.','340 million','English'],GB:['London','68 million','English']};
-const CENT={AF:[33,66],AL:[41,20],BR:[-10,-52],EG:[26,30],DE:[51,10],IN:[21,78],JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2]};
 const ISO3={AF:'AFG',AL:'ALB',BR:'BRA',EG:'EGY',DE:'DEU',IN:'IND',JP:'JPN',TR:'TUR',US:'USA',GB:'GBR'};
 const FALL={countries:[
 {name:'Afghanistan',iso:'AF',proverbs:['A little water is a sea to an ant.','A wise enemy is better than a foolish friend.','Patience is bitter, but it has a sweet fruit.','One flower does not bring spring.']},
@@ -21,7 +20,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function others(name){const cs=shuffle(DATA.countries.filter(c=>c.name!==name&&c.proverbs&&c.proverbs.length));return cs.slice(0,3).map(c=>({text:pick(c.proverbs),from:c.name,iso:c.iso}));}
 function latLonToVec(lat,lon,r){const p=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;return new THREE.Vector3(-Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)).multiplyScalar(r||1);}
-let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,spinSpeed=0.01,targetSpeed=0.01,hold=false;
+let score=0,streak=0,locked=false,current=null,scene,camera,renderer,globeMesh,paintGroup,pendingGeo=null,spinSpeed=0.01,targetSpeed=0.01,hold=false;
 const canvas=document.getElementById('globe');
 function initGlobe(){
  if(typeof THREE==='undefined')return;
@@ -29,7 +28,12 @@ function initGlobe(){
  camera=new THREE.PerspectiveCamera(32,1,0.1,80); camera.position.set(0,0,3.45);
  renderer=new THREE.WebGLRenderer({canvas,antialias:true}); renderer.setClearColor(0x000000,1);
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
- new THREE.TextureLoader().load(EARTH,tex=>{tex.colorSpace=THREE.SRGBColorSpace;globeMesh=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),new THREE.MeshPhongMaterial({map:tex,shininess:16}));scene.add(globeMesh);});
+ new THREE.TextureLoader().load(EARTH,tex=>{
+  tex.colorSpace=THREE.SRGBColorSpace;
+  globeMesh=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),new THREE.MeshPhongMaterial({map:tex,shininess:16}));
+  scene.add(globeMesh);
+  if(pendingGeo){const g=pendingGeo;pendingGeo=null;paintCountry(g);}
+ });
  scene.add(new THREE.AmbientLight(0x445566,.7));
  const sun=new THREE.DirectionalLight(0xfff4dd,2);sun.position.set(5,2,3);scene.add(sun);
  function resize(){const w=canvas.clientWidth||320,h=canvas.clientHeight||280;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
@@ -37,7 +41,7 @@ function initGlobe(){
  (function loop(){requestAnimationFrame(loop);spinSpeed+=(targetSpeed-spinSpeed)*0.06;if(globeMesh&&!hold)globeMesh.rotation.y+=spinSpeed;if(renderer)renderer.render(scene,camera);})();
 }
 function paintCountry(geo){
- if(!globeMesh)return;
+ if(!globeMesh){pendingGeo=geo;return;}
  if(paintGroup){globeMesh.remove(paintGroup);paintGroup=null;}
  const g=new THREE.Group();
  const stroke=new THREE.LineBasicMaterial({color:0xffd45a});
@@ -46,9 +50,11 @@ function paintCountry(geo){
   if(!f||!f.geometry)continue;
   const polys=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[];
   for(const poly of polys){
-   const ring=poly[0]; if(!ring||ring.length<4)continue;
-   const pts=ring.map(([lo,la])=>latLonToVec(la,lo,1.014));
+   const ring=poly&&poly[0]; if(!ring||ring.length<4)continue;
+   const pts=ring.map(([lo,la])=>latLonToVec(la,lo,1.016));
    g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),stroke));
+   const pts2=ring.map(([lo,la])=>latLonToVec(la,lo,1.022));
+   g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts2),stroke));
   }
  }
  paintGroup=g; globeMesh.add(g);
@@ -69,6 +75,7 @@ function startSpin(){
  document.getElementById('infoBtn').classList.add('hidden');
  document.getElementById('spinBtn').disabled=true;
  if(paintGroup&&globeMesh){globeMesh.remove(paintGroup);paintGroup=null;}
+ pendingGeo=null;
  setTimeout(()=>{targetSpeed=0.02;setTimeout(showRound,400);},1400);
 }
 function showRound(){
