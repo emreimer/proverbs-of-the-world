@@ -27,7 +27,7 @@ function destQuat(iso){
   return new THREE.Quaternion().setFromRotationMatrix(m).invert();
 }
 function fmtPop(n){
-  if (typeof n !== 'number') return '\u2014';
+  if (typeof n !== 'number') return '—';
   if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + ' billion';
   if (n >= 1e6) return (n/1e6).toFixed(n >= 1e8 ? 0 : 1).replace(/\.0$/,'') + ' million';
   return n.toLocaleString('en');
@@ -48,17 +48,17 @@ const FALLBACK_INFO = {
 const OFFICIAL_LANG = { IL: 'Hebrew' };
 function officialLang(iso, raw){
   if (OFFICIAL_LANG[iso]) return OFFICIAL_LANG[iso];
-  return raw || '\u2014';
+  return raw || '—';
 }
 function applyInfo(info, iso){
-  info = info || { capital:'\u2014', population:'\u2014', language:'\u2014' };
-  document.getElementById('pageCap').textContent = info.capital || '\u2014';
-  document.getElementById('pagePop').textContent = info.population || '\u2014';
+  info = info || { capital:'—', population:'—', language:'—' };
+  document.getElementById('pageCap').textContent = info.capital || '—';
+  document.getElementById('pagePop').textContent = info.population || '—';
   document.getElementById('pageLang').textContent = officialLang(iso || info.iso, info.language);
 }
 function loadInfo(iso){
   const have = INFO[iso];
-  if (have && have.capital && have.capital !== '\u2014') {
+  if (have && have.capital && have.capital !== '—') {
     have.language = officialLang(iso, have.language);
     return Promise.resolve(have);
   }
@@ -68,14 +68,14 @@ function loadInfo(iso){
       const langs = d.languages ? Object.values(d.languages) : [];
       const info = {
         iso,
-        capital: (d.capital && d.capital[0]) || '\u2014',
+        capital: (d.capital && d.capital[0]) || '—',
         population: fmtPop(d.population),
         language: officialLang(iso, langs.join(', '))
       };
       INFO[iso] = info;
       return info;
     })
-    .catch(() => have || FALLBACK_INFO[iso] || { capital:'\u2014', population:'\u2014', language:'\u2014' });
+    .catch(() => have || FALLBACK_INFO[iso] || { capital:'—', population:'—', language:'—' });
 }
 let score=0, streak=0, locked=false, current=null;
 let scene, camera, renderer, globeMesh, paintGroup, pendingGeo=null;
@@ -167,6 +167,7 @@ function startSpin(){
   document.getElementById('opts').innerHTML = '';
   document.getElementById('result').textContent = '';
   document.getElementById('hint').textContent = 'Finding a country';
+  document.getElementById('country').textContent = '…';
   document.getElementById('q').classList.add('hidden');
   document.getElementById('flag').classList.add('hidden');
   document.getElementById('infoBtn').classList.add('hidden');
@@ -211,7 +212,7 @@ function openCountryPage(){
   const c = current.country;
   document.getElementById('pageFlag').src = FLAGL(c.iso);
   document.getElementById('pageName').textContent = c.name;
-  applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'\u2026', population:'\u2026', language:'\u2026' }, c.iso);
+  applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'…', population:'…', language:'…' }, c.iso);
   loadInfo(c.iso).then(info => applyInfo(info, c.iso));
   document.getElementById('page').classList.add('open');
   const cvs = document.getElementById('pageGlobe');
