@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#000"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<title>Proverbs of the World</title>
+<style>
+:root{--ink:#f4efe6;--muted:#9eb0c4;--gold:#e6c56a;--good:#43d39a;--bad:#ef6673;--line:rgba(255,255,255,.1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--ink)}
+body{font-family:Georgia,Palatino,serif;padding:max(8px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+.wrap{max-width:480px;margin:0 auto}
+header{text-align:center;padding:4px 2px 6px}
+.brand{font-size:17px;letter-spacing:.12em;text-transform:uppercase}
+.stats{margin-top:6px;font-family:-apple-system,sans-serif;font-size:17px;color:var(--muted)}
+.stats b{color:#fff}
+.mute,.app-btn{margin-left:8px;border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;padding:8px 12px;font-size:14px}
+.space{height:min(32vh,250px);margin:0 -12px 2px;background:#000}
+#globe{width:100%;height:min(32vh,250px);display:block}
+.stage{border:1px solid var(--line);border-radius:22px;padding:12px}
+.country-row{display:flex;align-items:center;gap:10px;cursor:pointer}
+.flag{width:62px;height:40px;object-fit:cover;border-radius:6px}
+.cname{margin:0;font-size:28px}
+.info-btn{margin-left:auto;border:1px solid var(--line);background:#151b24;color:#fff;border-radius:999px;padding:8px 12px;font-size:15px;font-family:-apple-system,sans-serif;white-space:nowrap}
+.hint{color:var(--muted);font-size:17px;font-family:-apple-system,sans-serif}
+h2.q{font-size:21px;line-height:1.35;margin:12px 0;font-family:-apple-system,sans-serif;font-weight:700}
+.opts{display:grid;gap:10px}
+.opt{width:100%;text-align:left;color:#fff;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:16px 14px;font:inherit;font-size:21px;line-height:1.45}
+.meta{display:none;align-items:center;gap:8px;margin-top:10px;font-size:16px}
+.revealed .meta{display:flex}
+.opt.correct{border-color:var(--good)}
+.opt.wrong{border-color:var(--bad)}
+.btn{width:100%;border:0;border-radius:999px;padding:17px;font-size:20px;font-weight:800;background:var(--gold);margin-top:12px}
+.page{display:none;position:fixed;inset:0;z-index:20;background:#000;padding:20px;overflow:auto}
+.page.open{display:block}
+.page-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.page-head{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.page-head h1{margin:0;font-size:28px;line-height:1.15}
+.page-map{width:100%;height:230px;border:0;border-radius:14px;margin:8px 0 14px;background:#000;display:block}
+.fact{background:#0e1622;border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0;font-size:22px}
+.fact span{display:block;font-size:15px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.hidden{display:none!important}
+.back{border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;padding:10px 16px;font-size:18px;flex:none}
+#result{font-size:18px;min-height:24px}
+.app-page{font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+.app-page h1{margin:0;font-size:24px}
+.app-copy{font-size:17px;line-height:1.5;color:#e8e4db;margin:12px 0 18px}
+.author{display:flex;gap:14px;align-items:flex-start;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.author img{width:88px;height:88px;object-fit:cover;border-radius:50%;flex:none}
+.author h2{margin:0 0 6px;font-size:20px}
+.author p{margin:0;font-size:15px;line-height:1.45;color:#c9d3df}
+.book{display:block;text-decoration:none;color:inherit;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:14px;margin:16px 0 8px}
+.book img{width:160px;height:auto;display:block;margin:0 auto 12px;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.book strong{display:block;text-align:center;font-size:18px;margin-bottom:6px}
+.book em{display:block;text-align:center;font-style:normal;color:var(--muted);font-size:14px}
+.buy{display:block;text-align:center;background:var(--gold);color:#111;font-weight:800;border-radius:999px;padding:16px;margin:10px 0 24px;text-decoration:none;font-size:18px}
+</style></head>
+<body>
+<audio id="spinAudio" preload="auto" playsinline webkit-playsinline></audio>
+<div class="page" id="page">
+<div class="page-top">
+<div class="page-head">
+<img id="pageFlag" class="flag" alt=""/>
+<h1 id="pageName"></h1>
+</div>
+<button class="back" id="backBtn">Back</button>
+</div>
+<canvas id="pageGlobe" class="page-map" width="640" height="360"></canvas>
+<div class="fact"><span>Population</span><b id="pagePop"></b></div>
+<div class="fact"><span>Official language</span><b id="pageLang"></b></div>
+<div class="fact"><span>Capital</span><b id="pageCap"></b></div>
+</div>
+<div class="page app-page" id="appPage">
+<div class="page-top">
+<div class="page-head"><h1>App Info</h1></div>
+<button class="back" id="appBack">Back</button>
+</div>
+<p class="app-copy">This quiz was made by the author of <b>Proverbs of the World</b>. The game uses proverbs from that book so you can guess which country a saying comes from.</p>
+<div class="author">
+<img src="https://m.media-amazon.com/images/S/amzn-author-media-prod/u90gqmo1aul2t2o270hkc1g8qd._SY600_.jpg" alt="Emre Imer"/>
+<div>
+<h2>Emre Imer</h2>
+<p>Emre Imer calls himself a citizen of the world. He was born in Turkey, spent part of his childhood in Germany, and lived in Czechia and Japan as an exchange student. He co-founded a company in Greece and later founded his own company in Estonia. He holds a bachelor’s degree in Mechanical Engineering and a master’s degree in Insurance, and works in international business development. As an author and editor he shares what he has learned across cultures.</p>
+</div>
+</div>
+<a class="book" href="https://www.amazon.com/Proverbs-World-Over-2000-Countries/dp/1731477732/ref=sr_1_1?crid=1G4ZM74WZQS1P&dib=eyJ2IjoiMSJ9.oTMQKbjZpMCeuGBZz-JEdw.6FiFu-Z2VUmhT7toeZSJW4sq--mAT3CBiBr6vuOlwng&dib_tag=se&keywords=emre+imer+proverbs&qid=1790160886&sprefix=emre+im%2Caps%2C1435&sr=8-1" target="_blank" rel="noopener">
+<img src="https://m.media-amazon.com/images/I/61GFj+6Os4L._SL800_.jpg" alt="Proverbs of the World book cover"/>
+<strong>Proverbs of the World</strong>
+<em>Over 2000 proverbs from 162 countries</em>
+</a>
+<a class="buy" href="https://www.amazon.com/Proverbs-World-Over-2000-Countries/dp/1731477732/ref=sr_1_1?crid=1G4ZM74WZQS1P&dib=eyJ2IjoiMSJ9.oTMQKbjZpMCeuGBZz-JEdw.6FiFu-Z2VUmhT7toeZSJW4sq--mAT3CBiBr6vuOlwng&dib_tag=se&keywords=emre+imer+proverbs&qid=1790160886&sprefix=emre+im%2Caps%2C1435&sr=8-1" target="_blank" rel="noopener">Buy the book on Amazon</a>
+</div>
+<div class="wrap">
+<header><div class="brand">Proverbs of the World</div><div class="stats">Score <b id="score">0</b> · Streak <b id="streak">0</b> · <button type="button" id="muteBtn" class="mute">Sound on</button><button type="button" id="appBtn" class="app-btn">App Info</button></div></header>
+<div class="space"><canvas id="globe" width="720" height="640"></canvas></div>
+<div class="stage">
+<div class="country-row" id="countryRow">
+<img id="flag" class="flag hidden"/>
+<h1 id="country" class="cname">Proverbs Quiz</h1>
+<button type="button" class="info-btn hidden" id="infoBtn">Country Info</button>
+</div>
+<p id="hint" class="hint">Spin to land on a country</p>
+<h2 id="q" class="q hidden">Which of these four proverbs is from this country?</h2>
+<div id="opts" class="opts"></div>
+<p id="result"></p>
+<button class="btn" id="spinBtn">Spin the world</button>
+</div></div>
+<script src="sound.js?v=33"></script>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+<script src="game.js?v=33"></script>
+<script>
+document.getElementById('appBtn').onclick = () => document.getElementById('appPage').classList.add('open');
+document.getElementById('appBack').onclick = () => document.getElementById('appPage').classList.remove('open');
+</script>
+</body></html>
