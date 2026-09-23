@@ -96,7 +96,10 @@ function countryLabel(c){
   if (LANG !== 'tr') return c.name;
   return COUNTRY_TR_BY_NAME[c.name] || COUNTRY_TR[c.iso] || c.name;
 }
-function proverbText(text){ return text; }
+function proverbText(text){
+  if (LANG === 'tr' && typeof TR_MAP !== 'undefined' && TR_MAP[text]) return TR_MAP[text];
+  return text;
+}
 function setLang(next){
   LANG = next;
   localStorage.setItem('potw-lang', next);
