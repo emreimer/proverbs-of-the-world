@@ -28,9 +28,9 @@ function destQuat(iso){
 }
 function fmtPop(n){
   if (typeof n !== 'number') return '—';
-  if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + ' billion';
-  if (n >= 1e6) return (n/1e6).toFixed(n >= 1e8 ? 0 : 1).replace(/\.0$/,'') + ' million';
-  return n.toLocaleString('en');
+  if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + ' ' + t('billion');
+  if (n >= 1e6) return (n/1e6).toFixed(n >= 1e8 ? 0 : 1).replace(/\.0$/,'') + ' ' + t('million');
+  return n.toLocaleString(LANG === 'tr' ? 'tr' : 'en');
 }
 const FALLBACK_INFO = {
   JP:{capital:'Tokyo',population:'123 million',language:'Japanese'},
@@ -166,7 +166,7 @@ function startSpin(){
   hold = false; travel = null; targetSpeed = 0.22; locked = true;
   document.getElementById('opts').innerHTML = '';
   document.getElementById('result').textContent = '';
-  document.getElementById('hint').textContent = 'Finding a country';
+  document.getElementById('hint').textContent = t('finding');
   document.getElementById('country').textContent = '…';
   document.getElementById('q').classList.add('hidden');
   document.getElementById('flag').classList.add('hidden');
@@ -179,9 +179,9 @@ function startSpin(){
 function showRound(){
   const pool = DATA.countries.filter(c => c.proverbs && c.proverbs.length);
   const c = pick(pool); const correct = pick(c.proverbs);
-  const ch = shuffle([{ text: correct, ok: true, from: c.name, iso: c.iso }, ...others(c.name)]);
+  const ch = shuffle([{ text: correct, ok: true, from: countryLabel(c), iso: c.iso }, ...others(c.name).map(o => Object.assign(o, { from: countryLabel({ name: o.from, iso: o.iso }) }))]);
   current = { country: c, correct }; aimAt(c.iso);
-  document.getElementById('country').textContent = c.name;
+  document.getElementById('country').textContent = countryLabel(c);
   const fl = document.getElementById('flag'); fl.src = FLAGL(c.iso); fl.classList.remove('hidden');
   document.getElementById('infoBtn').classList.remove('hidden');
   document.getElementById('hint').textContent = '';
@@ -195,7 +195,7 @@ function showRound(){
     b.querySelector('.meta span').textContent = opt.from;
     b.onclick = () => answer(b, opt); box.appendChild(b);
   });
-  locked = false; document.getElementById('spinBtn').disabled = false; document.getElementById('spinBtn').textContent = 'Next country';
+  locked = false; document.getElementById('spinBtn').disabled = false; document.getElementById('spinBtn').textContent = t('next');
 }
 function answer(btn, ch){
   if (locked) return; locked = true;
@@ -203,15 +203,15 @@ function answer(btn, ch){
     el.classList.add('revealed');
     if (el.querySelector('.proverb').textContent === current.correct) el.classList.add('correct');
   });
-  if (ch.ok){ btn.classList.add('correct'); score += 10; streak++; document.getElementById('result').textContent = 'Correct. +10'; }
-  else { btn.classList.add('wrong'); streak = 0; document.getElementById('result').textContent = 'Not this one. That proverb is from ' + ch.from + '.'; }
+  if (ch.ok){ btn.classList.add('correct'); score += 10; streak++; document.getElementById('result').textContent = t('correct'); }
+  else { btn.classList.add('wrong'); streak = 0; document.getElementById('result').textContent = t('wrong').replace('{country}', ch.from); }
   document.getElementById('score').textContent = score; document.getElementById('streak').textContent = streak;
 }
 function openCountryPage(){
   if (!current || !current.country) return;
   const c = current.country;
   document.getElementById('pageFlag').src = FLAGL(c.iso);
-  document.getElementById('pageName').textContent = c.name;
+  document.getElementById('pageName').textContent = countryLabel(c);
   applyInfo(INFO[c.iso] || FALLBACK_INFO[c.iso] || { capital:'…', population:'…', language:'…' }, c.iso);
   loadInfo(c.iso).then(info => applyInfo(info, c.iso));
   document.getElementById('page').classList.add('open');
@@ -247,6 +247,37 @@ function openCountryPage(){
     }).catch(() => {});
   }
 }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  const set = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+  set('brand','brand');
+  set('scoreLbl','score');
+  set('streakLbl','streak');
+  set('appBtn','appInfo');
+  set('infoBtn','countryInfo');
+  set('q','question');
+  set('appTitle','appInfo');
+  set('appCopy','appCopy');
+  set('authorBio','authorBio');
+  set('bookSub','bookSub');
+  set('buyBook','buyBook');
+  set('lblPop','population');
+  set('lblLang','language');
+  set('lblCap','capital');
+  set('backBtn','back');
+  set('appBack','back');
+  const hint = document.getElementById('hint');
+  if (hint && !current) hint.textContent = t('spinHint');
+  const spin = document.getElementById('spinBtn');
+  if (spin) spin.textContent = current ? t('next') : t('spin');
+  const country = document.getElementById('country');
+  if (country && current) country.textContent = countryLabel(current.country);
+  else if (country && country.textContent !== '…') country.textContent = t('quizTitle');
+  const mute = document.getElementById('muteBtn');
+  if (mute) mute.textContent = (window.SOUND_MUTED ? t('soundOff') : t('soundOn'));
+  const sel = document.getElementById('langSel');
+  if (sel) sel.value = LANG;
+}
 document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
@@ -278,4 +309,4 @@ Promise.all([
     CENT = {JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2],BR:[-10,-52],EG:[26,30],IN:[21,78],DE:[51,10],MX:[24,-102],BO:[-17,-65]};
     ISO3 = {JP:'JPN',TR:'TUR',US:'USA',GB:'GBR',BR:'BRA',EG:'EGY',IN:'IND',DE:'DEU',MX:'MEX',BO:'BOL'};
   })
-  .finally(() => initGlobe());
+  .finally(() => { initGlobe(); applyI18n(); const sel = document.getElementById('langSel'); if (sel) sel.onchange = () => setLang(sel.value); });
