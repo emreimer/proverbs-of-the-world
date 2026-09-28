@@ -7,9 +7,27 @@ const FLAG = i => 'https://flagcdn.com/w40/' + i.toLowerCase() + '.png';
 const FLAGL = i => 'https://flagcdn.com/w160/' + i.toLowerCase() + '.png';
 const pick = a => a[Math.floor(Math.random() * a.length)];
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function others(name){
-  const cs = shuffle(DATA.countries.filter(c => c.name !== name && c.proverbs && c.proverbs.length));
-  return cs.slice(0,3).map(c => ({ text: pick(c.proverbs), from: c.name, iso: c.iso }));
+function sayings(c){
+  const pack = (typeof ORIG !== "undefined" && ORIG[LANG] && ORIG[LANG][c.iso]) || null;
+  if (pack && pack.length) return pack;
+  return c.proverbs || [];
+}
+function shown(line){ return proverbText(line); }
+function others(country){
+  const used = new Set();
+  const correctLine = shown(country._correct);
+  used.add(correctLine);
+  const cs = shuffle(DATA.countries.filter(c => c.iso !== country.iso && sayings(c).length));
+  const out = [];
+  for (const c of cs){
+    const options = shuffle(sayings(c)).filter(line => !used.has(shown(line)));
+    if (!options.length) continue;
+    const line = options[0];
+    used.add(shown(line));
+    out.push({ text: shown(line), from: countryLabel(c), iso: c.iso, ok: false });
+    if (out.length === 3) break;
+  }
+  return out;
 }
 function latLonToVec(lat,lon,r){
   const p=(90-lat)*Math.PI/180, t=(lon+180)*Math.PI/180;
@@ -50,33 +68,34 @@ function officialLang(iso, raw){
   if (OFFICIAL_LANG[iso]) return OFFICIAL_LANG[iso];
   return raw || '—';
 }
-function applyInfo(info, iso){
-  info = info || { capital:'—', population:'—', language:'—' };
-  document.getElementById('pageCap').textContent = info.capital || '—';
-  document.getElementById('pagePop').textContent = info.population || '—';
-  document.getElementById('pageLang').textContent = officialLang(iso || info.iso, info.language);
+function placeLine(row, role){
+  const name = capitalName(row.name);
+  const titled = role ? name + " (" + role + ")" : name;
+  if (!row.pop) return titled;
+  const year = LANG === "ja" ? "（" + row.year + "年）" : "(" + row.year + ")";
+  return titled + " — " + localizeFact(row.pop) + " " + year;
 }
-function loadInfo(iso){
-  const have = INFO[iso];
-  if (have && have.capital && have.capital !== '—') {
-    have.language = officialLang(iso, have.language);
-    return Promise.resolve(have);
-  }
-  return fetch('https://restcountries.com/v3.1/alpha/' + iso + '?fields=capital,population,languages')
-    .then(r => { if (!r.ok) throw 0; return r.json(); })
-    .then(d => {
-      const langs = d.languages ? Object.values(d.languages) : [];
-      const info = {
-        iso,
-        capital: (d.capital && d.capital[0]) || '—',
-        population: fmtPop(d.population),
-        language: officialLang(iso, langs.join(', '))
-      };
-      INFO[iso] = info;
-      return info;
-    })
-    .catch(() => have || FALLBACK_INFO[iso] || { capital:'—', population:'—', language:'—' });
+function fillFacts(iso){
+  const box = document.getElementById("facts");
+  if (!box) return;
+  const info = (typeof FACTS !== "undefined" && FACTS[iso]) || null;
+  const c = current && current.country;
+  const name = c ? countryLabel(c) : "";
+  if (!info){ box.innerHTML = ""; return; }
+  const cities = []
+    .concat((info.capitals || []).map(row => placeLine(row, t("capitalTag"))))
+    .concat((info.cities || []).map(row => placeLine(row)));
+  const blocks = [
+    [t("population"), localizeFact(info.population || "")],
+    [t("language"), info.language ? localizeFact(info.language) : t("noOfficial")],
+    [t("cities"), cities.join("; ")],
+    [t("about").replace("{country}", name), aboutText(iso, info.background || "")]
+  ];
+  box.innerHTML = blocks.map(([k,v]) => '<div class="fact"><span>' + k + '</span><b>' + String(v).replace(/\n/g, "<br>") + '</b></div>').join("")
+    + '<p class="note">' + t("factNote") + '</p>';
 }
+function applyInfo(info, iso){ fillFacts(iso); }
+function loadInfo(iso){ fillFacts(iso); return Promise.resolve(FACTS[iso] || {}); }
 let score=0, streak=0, locked=false, current=null;
 let scene, camera, renderer, globeMesh, paintGroup, pendingGeo=null;
 let spinSpeed=0.01, targetSpeed=0.01, hold=false, travel=null;
@@ -176,11 +195,13 @@ function startSpin(){
   pendingGeo = null;
   setTimeout(() => { targetSpeed = 0.02; setTimeout(showRound, 500); }, 1300);
 }
-function showRound(){
-  const pool = DATA.countries.filter(c => c.proverbs && c.proverbs.length);
-  const c = pick(pool); const correct = pick(c.proverbs);
-  const ch = shuffle([{ text: correct, ok: true, from: countryLabel(c), iso: c.iso }, ...others(c.name).map(o => Object.assign(o, { from: countryLabel({ name: o.from, iso: o.iso }) }))]);
-  current = { country: c, correct }; aimAt(c.iso);
+function showRound(force){
+  const pool = DATA.countries.filter(c => sayings(c).length);
+  const c = force || pick(pool);
+  const correct = pick(sayings(c));
+  c._correct = correct;
+  const ch = shuffle([{ text: shown(correct), ok: true, from: countryLabel(c), iso: c.iso }, ...others(c)]);
+  current = { country: c, correct: shown(correct) }; aimAt(c.iso);
   document.getElementById('country').textContent = countryLabel(c);
   const fl = document.getElementById('flag'); fl.src = FLAGL(c.iso); fl.classList.remove('hidden');
   document.getElementById('infoBtn').classList.remove('hidden');
@@ -261,11 +282,9 @@ function applyI18n(){
   set('authorBio','authorBio');
   set('bookSub','bookSub');
   set('buyBook','buyBook');
-  set('lblPop','population');
-  set('lblLang','language');
-  set('lblCap','capital');
   set('backBtn','back');
   set('appBack','back');
+  if (current) fillFacts(current.country.iso);
   const hint = document.getElementById('hint');
   if (hint && !current) hint.textContent = t('spinHint');
   const spin = document.getElementById('spinBtn');
@@ -282,31 +301,48 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
+const V = "40";
+function loadJson(path){
+  return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
+}
+function ensureLang(lang){
+  if (!lang || lang === "en") return Promise.resolve();
+  const jobs = [];
+  if (!MAPS[lang]) jobs.push(loadJson("data/map-" + lang + ".json").then(d => { MAPS[lang] = d; }));
+  if (!BGS[lang]) jobs.push(loadJson("data/bg-" + lang + ".json").then(d => { BGS[lang] = d; }));
+  return Promise.all(jobs);
+}
+window.onLangChange = function(next){
+  ensureLang(next).then(() => {
+    applyI18n();
+    if (current) showRound(current.country);
+  });
+};
 Promise.all([
-  fetch('c0.json?v=32'), fetch('c1.json?v=32'), fetch('c2.json?v=32'), fetch('c3.json?v=32'), fetch('meta.json?v=32')
-].map(p => p.then(r => { if (!r.ok) throw 0; return r.json(); })))
-  .then(([a,b,c,d,m]) => {
-    DATA = { countries: [].concat(a,b,c,d) };
-    INFO = Object.assign({}, FALLBACK_INFO, m.info || {});
-    if (INFO.IL) INFO.IL.language = 'Hebrew';
-    CENT = m.cent || {};
-    ISO3 = m.iso3 || {};
-  })
-  .catch(() => {
-    DATA = { countries: [
-      {name:'Japan',iso:'JP',proverbs:['Fall seven times and stand up eight.']},
-      {name:'Turkey',iso:'TR',proverbs:['A cup of coffee commits one to forty years of friendship.']},
-      {name:'USA',iso:'US',proverbs:['The early bird catches the worm.']},
-      {name:'United Kingdom',iso:'GB',proverbs:['A stitch in time saves nine.']},
-      {name:'Brazil',iso:'BR',proverbs:['A sleeping fox finds no meat.']},
-      {name:'Egypt',iso:'EG',proverbs:['A beautiful thing is never perfect.']},
-      {name:'India',iso:'IN',proverbs:['Learning is a treasure no thief can touch.']},
-      {name:'Germany',iso:'DE',proverbs:['All beginnings are hard.']},
-      {name:'Mexico',iso:'MX',proverbs:['Better late than never.']},
-      {name:'Bolivia',iso:'BO',proverbs:['It is better to eat bread with love than fowl with grief.']}
-    ]};
-    INFO = Object.assign({}, FALLBACK_INFO);
-    CENT = {JP:[36,138],TR:[39,35],US:[39,-98],GB:[54,-2],BR:[-10,-52],EG:[26,30],IN:[21,78],DE:[51,10],MX:[24,-102],BO:[-17,-65]};
-    ISO3 = {JP:'JPN',TR:'TUR',US:'USA',GB:'GBR',BR:'BRA',EG:'EGY',IN:'IND',DE:'DEU',MX:'MEX',BO:'BOL'};
-  })
-  .finally(() => { initGlobe(); applyI18n(); const sel = document.getElementById('langSel'); if (sel) sel.onchange = () => setLang(sel.value); });
+  loadJson("data/countries.json"),
+  loadJson("data/meta.json"),
+  loadJson("data/factbook.json"),
+  loadJson("data/originals.json")
+]).then(([countries, meta, facts, originals]) => {
+  DATA = { countries };
+  CENT = meta.cent || {};
+  ISO3 = meta.iso3 || {};
+  FACTS = facts || {};
+  ORIG = originals || {};
+  return ensureLang(LANG);
+}).catch(() => {
+  DATA = { countries: [] };
+}).finally(() => {
+  initGlobe();
+  applyI18n();
+  const sel = document.getElementById("langSel");
+  if (sel){
+    sel.innerHTML = "";
+    [["es","Español"],["fr","Français"],["de","Deutsch"],["ja","日本語"],["tr","Türkçe"],["en","English"]].forEach(([id,name]) => {
+      const o = document.createElement("option");
+      o.value = id; o.textContent = name; sel.appendChild(o);
+    });
+    sel.value = LANG;
+    sel.onchange = () => setLang(sel.value);
+  }
+});
