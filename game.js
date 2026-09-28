@@ -88,11 +88,9 @@ function fillFacts(iso){
   const blocks = [
     [t("population"), localizeFact(info.population || "")],
     [t("language"), info.language ? localizeFact(info.language) : t("noOfficial")],
-    [t("cities"), cities.join("; ")],
-    [t("about").replace("{country}", name), aboutText(iso, info.background || "")]
+    [t("cities"), cities.join("; ")]
   ];
-  box.innerHTML = blocks.map(([k,v]) => '<div class="fact"><span>' + k + '</span><b>' + String(v).replace(/\n/g, "<br>") + '</b></div>').join("")
-    + '<p class="note">' + t("factNote") + '</p>';
+  box.innerHTML = blocks.map(([k,v]) => '<div class="fact"><span>' + k + '</span><b>' + String(v).replace(/\n/g, "<br>") + '</b></div>').join("");
 }
 function applyInfo(info, iso){ fillFacts(iso); }
 function loadInfo(iso){ fillFacts(iso); return Promise.resolve(FACTS[iso] || {}); }
@@ -190,6 +188,7 @@ function startSpin(){
   document.getElementById('q').classList.add('hidden');
   document.getElementById('flag').classList.add('hidden');
   document.getElementById('infoBtn').classList.add('hidden');
+  const dictBox = document.getElementById('dictBox'); if (dictBox) dictBox.classList.add('hidden');
   document.getElementById('spinBtn').disabled = true;
   if (paintGroup && globeMesh){ globeMesh.remove(paintGroup); paintGroup = null; }
   pendingGeo = null;
@@ -201,7 +200,8 @@ function showRound(force){
   const correct = pick(sayings(c));
   c._correct = correct;
   const ch = shuffle([{ text: shown(correct), ok: true, from: countryLabel(c), iso: c.iso }, ...others(c)]);
-  current = { country: c, correct: shown(correct) }; aimAt(c.iso);
+  current = { country: c, correct: shown(correct), lines: ch.map(x => x.text) }; aimAt(c.iso);
+  const dictBox = document.getElementById('dictBox'); if (dictBox) dictBox.classList.remove('hidden'); if (typeof renderDict === 'function') renderDict();
   document.getElementById('country').textContent = countryLabel(c);
   const fl = document.getElementById('flag'); fl.src = FLAGL(c.iso); fl.classList.remove('hidden');
   document.getElementById('infoBtn').classList.remove('hidden');
@@ -285,6 +285,7 @@ function applyI18n(){
   set('backBtn','back');
   set('appBack','back');
   if (current) fillFacts(current.country.iso);
+  if (typeof renderDict === 'function') renderDict();
   const hint = document.getElementById('hint');
   if (hint && !current) hint.textContent = t('spinHint');
   const spin = document.getElementById('spinBtn');
@@ -318,17 +319,66 @@ window.onLangChange = function(next){
     if (current) showRound(current.country);
   });
 };
+let DICT_INDEX = {};
+let DICT_GLOSS = {};
+let dictTo = "en";
+let dictOpen = false;
+function dictLemmas(){
+  const table = (DICT_INDEX && DICT_INDEX[LANG]) || {};
+  const seen = {};
+  const out = [];
+  const lines = (current && current.lines) || [];
+  for (let i = 0; i < lines.length; i++){
+    const list = table[lines[i]] || [];
+    for (let j = 0; j < list.length; j++){
+      const lemma = list[j];
+      if (!seen[lemma]){ seen[lemma] = 1; out.push(lemma); }
+    }
+  }
+  return out;
+}
+function renderDict(){
+  const btn = document.getElementById("dictBtn");
+  if (btn) btn.textContent = t("dict");
+  const sel = document.getElementById("dictSel");
+  const names = {es:"Español",fr:"Français",de:"Deutsch",ja:"日本語",tr:"Türkçe",en:"English"};
+  if (sel && document.activeElement !== sel){
+    if (dictTo === LANG) dictTo = LANG === "en" ? "tr" : "en";
+    sel.innerHTML = "";
+    Object.keys(names).forEach(id => {
+      if (id === LANG) return;
+      const o = document.createElement("option");
+      o.value = id; o.textContent = names[id];
+      sel.appendChild(o);
+    });
+    sel.value = dictTo;
+  }
+  const list = document.getElementById("dictList");
+  if (!list) return;
+  list.classList.toggle("hidden", !dictOpen);
+  const target = dictTo === LANG ? (LANG === "en" ? "tr" : "en") : dictTo;
+  const gloss = (DICT_GLOSS && DICT_GLOSS[LANG]) || {};
+  list.innerHTML = dictLemmas().map(lemma => {
+    const row = gloss[lemma] || {};
+    const word = row[target] || "—";
+    return "<li><b></b> <span></span></li>".replace("<b>", "<b>" + lemma.replace(/&/g,"&").replace(/</g,"<")).replace("<span>", "<span>— " + String(word).replace(/&/g,"&").replace(/</g,"<"));
+  }).join("");
+}
 Promise.all([
   loadJson("data/countries.json"),
   loadJson("data/meta.json"),
   loadJson("data/factbook.json"),
-  loadJson("data/originals.json")
-]).then(([countries, meta, facts, originals]) => {
+  loadJson("data/originals.json"),
+  loadJson("data/dict-index.json").catch(() => ({})),
+  loadJson("data/dict-gloss.json").catch(() => ({}))
+]).then(([countries, meta, facts, originals, dictIndex, dictGloss]) => {
   DATA = { countries };
   CENT = meta.cent || {};
   ISO3 = meta.iso3 || {};
   FACTS = facts || {};
   ORIG = originals || {};
+  DICT_INDEX = dictIndex || {};
+  DICT_GLOSS = dictGloss || {};
   return ensureLang(LANG);
 }).catch(() => {
   DATA = { countries: [] };
@@ -345,4 +395,9 @@ Promise.all([
     sel.value = LANG;
     sel.onchange = () => setLang(sel.value);
   }
+  const dictBtn = document.getElementById("dictBtn");
+  if (dictBtn) dictBtn.onclick = () => { dictOpen = !dictOpen; renderDict(); };
+  const dictSel = document.getElementById("dictSel");
+  if (dictSel) dictSel.onchange = () => { dictTo = dictSel.value; renderDict(); };
+  renderDict();
 });
