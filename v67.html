@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#000"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<title>Proverbs Quiz</title>
+<style>
+:root{--ink:#f4efe6;--muted:#9eb0c4;--gold:#e6c56a;--good:#43d39a;--bad:#ef6673;--line:rgba(255,255,255,.1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--ink)}
+body{font-family:Georgia,Palatino,serif;padding:max(8px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+.wrap{max-width:480px;margin:0 auto}
+header{text-align:center;padding:4px 2px 6px}
+.brand{font-size:17px;letter-spacing:.12em;text-transform:uppercase}
+.stats{margin-top:8px;display:flex;flex-wrap:nowrap;align-items:center;gap:6px;width:100%;font-family:-apple-system,sans-serif;font-size:clamp(13px,3.5vw,15px);color:var(--muted);white-space:nowrap}
+html[lang=pt] .stats{flex-wrap:wrap;row-gap:6px;font-size:clamp(12px,3.3vw,14px)}
+html[lang=pt] .tools{flex:1 0 100%;margin-left:0;justify-content:space-between}
+html[lang=pt] #appBtn,html[lang=pt] #langSel{padding-left:10px;padding-right:10px}
+html[lang=pt] #langSel{padding-right:26px}
+.stats b{color:#fff}
+.tools{margin-left:auto;display:flex;flex:none;flex-wrap:nowrap;align-items:center;gap:6px}
+.mute,.app-btn{margin:0;border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;padding:0 10px;font-size:1em;font-weight:650;height:46px;min-height:46px;line-height:1;flex:none;white-space:nowrap;overflow:visible}
+.mute{position:static;width:46px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--gold);border-color:var(--gold);background:#241c08}
+.mute.off{color:#8ea0b4;border-color:var(--line);background:transparent}
+.mute .ico-off{display:none}
+.mute.off .ico-on{display:none}
+.mute.off .ico-off{display:block}
+#langSel{padding:0 26px 0 12px;font-weight:700;width:auto}
+#appBtn{overflow:visible;text-overflow:clip}
+.space{height:min(32vh,250px);margin:0 -12px 2px;background:#000}
+#globe{width:100%;height:min(32vh,250px);display:block}
+.stage{border:1px solid var(--line);border-radius:22px;padding:12px}
+.country-row{display:flex;align-items:center;gap:10px;cursor:pointer}
+.flag{width:62px;height:40px;object-fit:cover;border-radius:6px}
+.cname{margin:0;font-size:28px}
+.info-btn{margin-left:auto;border:1px solid var(--line);background:#151b24;color:#fff;border-radius:999px;padding:8px 12px;font-size:15px;font-family:-apple-system,sans-serif;white-space:nowrap}
+.hint{color:var(--muted);font-size:17px;font-family:-apple-system,sans-serif}
+h2.q{font-size:21px;line-height:1.35;margin:12px 0;font-family:-apple-system,sans-serif;font-weight:700}
+.opts{display:grid;gap:10px}
+.opt{width:100%;text-align:left;color:#fff;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:16px 14px;font:inherit;font-size:21px;line-height:1.45}
+.meta{display:none;align-items:center;gap:8px;margin-top:10px;font-size:16px}
+.revealed .meta{display:flex}
+.opt.correct{border-color:var(--good)}
+.opt.wrong{border-color:var(--bad)}
+.btn{width:100%;border:0;border-radius:999px;padding:17px;font-size:20px;font-weight:800;background:var(--gold);margin-top:8px}
+.page{display:none;position:fixed;inset:0;z-index:20;background:#000;padding:20px;overflow:auto}
+.page.open{display:block}
+.page-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.page-head{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.page-head h1{margin:0;font-size:28px;line-height:1.15}
+.page-map{width:100%;height:230px;border:0;border-radius:14px;margin:8px 0 14px;background:#000;display:block}
+.fact{background:#0e1622;border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0;font-size:22px}
+.fact span{display:block;font-size:15px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.fact b{font-weight:600;white-space:pre-line;line-height:1.45}
+.note{color:var(--muted);font-family:-apple-system,sans-serif;font-size:15px;line-height:1.45;margin:8px 4px 24px}
+.dict{margin-top:12px}
+.dict-row{display:flex;align-items:center;gap:8px}
+.dict-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:0}
+.dict-list li{font-family:-apple-system,sans-serif;font-size:18px;line-height:1.35}
+.dict-group + .dict-group{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.dict-proverb{color:var(--muted);font-size:15px;line-height:1.35;margin:0 0 8px}
+.dict-group ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.dict-list span{color:var(--muted)}
+.roma{font-style:italic;font-weight:400}
+.read{display:block;margin-top:6px;font-family:-apple-system,sans-serif;font-size:15px;line-height:1.35;font-style:italic;font-weight:400;color:var(--muted)}
+.student{margin:0 0 2px;border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;min-height:40px;height:auto;max-width:100%;padding:8px 14px;font:700 14px/1.25 -apple-system,sans-serif;text-align:center;white-space:normal}
+.student.on{color:var(--gold);border-color:var(--gold);background:#241c08}
+.hidden{display:none!important}
+.back{border:1px solid var(--line);background:transparent;color:#fff;border-radius:999px;padding:10px 16px;font-size:18px;flex:none}
+#result{font-size:18px;margin:0;min-height:0;font-family:-apple-system,sans-serif}
+#result:not(:empty){margin-top:8px}
+.app-page{font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+.app-page h1{margin:0;font-size:24px}
+.app-copy{font-size:17px;line-height:1.5;color:#e8e4db;margin:12px 0 18px}
+.author{display:block;overflow:hidden;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.author img{float:left;width:88px;height:88px;object-fit:cover;border-radius:50%;margin:2px 14px 8px 0}
+.author h2{margin:0 0 6px;font-size:20px}
+.author p{margin:0;font-size:15px;line-height:1.45;color:#c9d3df}
+.book{display:block;text-decoration:none;color:inherit;background:#0e1622;border:1px solid var(--line);border-radius:16px;padding:14px;margin:16px 0 8px}
+.book img{width:160px;height:auto;display:block;margin:0 auto 12px;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.book strong{display:block;text-align:center;font-size:18px;margin-bottom:6px}
+.book em{display:block;text-align:center;font-style:normal;color:var(--muted);font-size:14px}
+.buy{display:block;text-align:center;background:var(--gold);color:#111;font-weight:800;border-radius:999px;padding:16px;margin:10px 0 24px;text-decoration:none;font-size:18px}
+.gate{position:fixed;inset:0;z-index:40;background:#000;display:flex;align-items:center;justify-content:center;overflow:auto;padding:max(12px,env(safe-area-inset-top)) 18px max(12px,env(safe-area-inset-bottom))}
+.gate-inner{width:min(420px,100%)}
+.gate .brand{text-align:center}
+.gate h1{margin:4px 0 12px;text-align:center;font-size:32px;font-weight:500}
+.gate-list{display:grid;gap:8px}
+.gate-list button{width:100%;min-height:46px;border-radius:999px;border:1px solid var(--line);background:#0e1622;color:#fff;font:600 20px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.gate-list button:active{background:var(--gold);color:#111}
+</style></head>
+<body>
+<audio id="spinAudio" preload="auto" playsinline webkit-playsinline></audio>
+<div id="langGate" class="gate">
+<div class="gate-inner">
+<p class="brand">Proverbs of the World</p>
+<h1>Proverbs Quiz</h1>
+<div class="gate-list">
+<button type="button" onclick="pickLang('de')">Deutsch</button>
+<button type="button" onclick="pickLang('en')">English</button>
+<button type="button" onclick="pickLang('es')">Español</button>
+<button type="button" onclick="pickLang('fr')">Français</button>
+<button type="button" onclick="pickLang('it')">Italiano</button>
+<button type="button" onclick="pickLang('pt')">Português</button>
+<button type="button" onclick="pickLang('tr')">Türkçe</button>
+<button type="button" onclick="pickLang('el')">Ελληνικά</button>
+<button type="button" onclick="pickLang('ru')">Русский</button>
+<button type="button" onclick="pickLang('ko')">한국어</button>
+<button type="button" onclick="pickLang('ja')">日本語</button>
+</div>
+</div>
+</div>
+<script>
+function pickLang(id){
+  window.__pickedLang = id;
+  try { localStorage.setItem('potw-lang', id); } catch (e) {}
+  var gate = document.getElementById('langGate');
+  if (gate) gate.classList.add('hidden');
+  if (typeof setLang === 'function') setLang(id);
+}
+</script>
+<div class="page" id="page">
+<div class="page-top">
+<div class="page-head">
+<img id="pageFlag" class="flag" alt=""/>
+<h1 id="pageName"></h1>
+</div>
+<button class="back" id="backBtn">Geri</button>
+</div>
+<canvas id="pageGlobe" class="page-map" width="640" height="360"></canvas>
+<div id="facts"></div>
+</div>
+<div class="page app-page" id="appPage">
+<div class="page-top">
+<div class="page-head"><h1 id="appTitle">Uygulama Bilgisi</h1></div>
+<button class="back" id="appBack">Geri</button>
+</div>
+<p class="app-copy" id="appCopy">Bu oyun, Dünya Atasözleri kitabının yazarı tarafından geliştirildi.</p>
+<div class="author">
+<img id="authorPhoto" alt="Emre Imer"/>
+<div>
+<h2>Emre Imer</h2>
+<p id="authorBio">Emre Imer kendisini dünya vatandaşı olarak tanımlar.</p>
+</div>
+</div>
+<a class="book" href="https://www.amazon.com/Proverbs-World-Over-2000-Countries/dp/1731477732" target="_blank" rel="noopener">
+<img src="book-cover.jpg" alt="Proverbs of the World book cover"/>
+<strong>Proverbs of the World</strong>
+<em id="bookSub">162 ülkeden 2000’den fazla atasözü</em>
+</a>
+<a class="buy" href="https://www.amazon.com/Proverbs-World-Over-2000-Countries/dp/1731477732" target="_blank" rel="noopener"><span id="buyBook">More About the Book</span></a>
+</div>
+<div class="wrap">
+<header><div class="brand" id="brand">Proverbs of the World</div><div class="stats"><span id="scoreLbl">Score</span> <b id="score">0</b><span aria-hidden="true">·</span><span id="streakLbl">Streak</span> <b id="streak">0</b><span class="tools"><button type="button" id="appBtn" class="app-btn">App Info</button><select id="langSel" class="app-btn" aria-label="Language"></select><button type="button" id="muteBtn" class="mute" aria-pressed="false" aria-label="Sound on"><svg class="ico-on" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 8.5a4.5 4.5 0 010 7M18.8 6a8 8 0 010 12"/></svg><svg class="ico-off" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9l5 6M21 9l-5 6"/></svg></button></span></div></header>
+<div class="space"><canvas id="globe" width="720" height="640"></canvas></div>
+<div class="stage">
+<div class="country-row" id="countryRow">
+<img id="flag" class="flag hidden"/>
+<h1 id="country" class="cname">Atasözü Testi</h1>
+<button type="button" class="info-btn hidden" id="infoBtn">Ülke Bilgisi</button>
+</div>
+<p id="hint" class="hint">Bir ülkede durması için dünyayı çevir</p>
+<h2 id="q" class="q hidden">Bu dört atasözünden hangisi bu ülkeye ait?</h2>
+<button type="button" id="studentBtn" class="student hidden" aria-pressed="false">Latin transliteration</button>
+<div id="opts" class="opts"></div>
+<div id="dictBox" class="dict hidden">
+<div class="dict-row">
+<button type="button" id="dictBtn" class="info-btn">Dictionary</button>
+<select id="dictSel" class="app-btn" aria-label="Into"></select>
+</div>
+<ul id="dictList" class="dict-list hidden"></ul>
+</div>
+<p id="result"></p>
+<button class="btn" id="spinBtn">Dünyayı çevir</button>
+</div></div>
+<script src="i18n.js?v=67"></script>
+<script src="photo.js?v=67"></script>
+<script src="sound.js?v=67"></script>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+<script src="romanize.js?v=67"></script>
+<script src="game.js?v=67"></script>
+<script>
+document.getElementById('authorPhoto').src = window.EMRE_PHOTO;
+document.getElementById('appBtn').onclick = () => document.getElementById('appPage').classList.add('open');
+document.getElementById('appBack').onclick = () => document.getElementById('appPage').classList.remove('open');
+</script>
+</body></html>

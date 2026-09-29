@@ -309,7 +309,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "66";
+const V = "67";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -390,7 +390,7 @@ function syncStudentBtn(){
   const show = LANG === "ja" || LANG === "ko";
   b.classList.toggle("hidden", !show);
   b.classList.toggle("on", !!student);
-  b.textContent = "Student Mode - Latin harfleriyle yazım";
+  b.textContent = "Latin transliteration";
   b.setAttribute("aria-pressed", student ? "true" : "false");
 }
 function paintReadings(){
