@@ -35,8 +35,10 @@ function syncMute(){
   window.SOUND_MUTED = muted;
   const b=document.getElementById('muteBtn');
   if(!b) return;
-  if (typeof t === 'function') b.textContent = muted ? t('soundOff') : t('soundOn');
-  else b.textContent = muted ? 'Sound off' : 'Sound on';
+  b.classList.toggle('off', !!muted);
+  b.setAttribute('aria-pressed', muted ? 'true' : 'false');
+  const label = (typeof t === 'function') ? (muted ? t('soundOff') : t('soundOn')) : (muted ? 'Sound off' : 'Sound on');
+  b.setAttribute('aria-label', label);
 }
 window.syncMuteLabel = syncMute;
 function getCtx(){
