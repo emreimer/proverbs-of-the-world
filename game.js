@@ -278,10 +278,6 @@ function applyI18n(){
   set('scoreLbl','score');
   set('streakLbl','streak');
   set('appBtn','appInfo');
-  if (LANG === "el") {
-    const appBtn = document.getElementById("appBtn");
-    if (appBtn) appBtn.textContent = "Εφαρμογή";
-  }
   set('infoBtn','countryInfo');
   set('q','question');
   set('appTitle','appInfo');
@@ -313,7 +309,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "71";
+const V = "72";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -424,9 +420,9 @@ function renderDict(){
   const btn = document.getElementById("dictBtn");
   if (btn) btn.textContent = t("dict");
   const sel = document.getElementById("dictSel");
-  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",it:"Italiano",pt:"Português",tr:"Türkçe",el:"Ελληνικά",ru:"Русский",ko:"한국어",ja:"日本語"};
+  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",it:"Italiano",pt:"Português",tr:"Türkçe",ru:"Русский",ko:"한국어",ja:"日本語"};
   if (sel && document.activeElement !== sel){
-    if (dictTo === LANG) dictTo = LANG === "en" ? "tr" : "en";
+    if (dictTo === LANG || !names[dictTo]) dictTo = LANG === "en" ? "tr" : "en";
     sel.innerHTML = "";
     Object.keys(names).forEach(id => {
       if (id === LANG) return;
@@ -474,7 +470,7 @@ Promise.all([
   const sel = document.getElementById("langSel");
   if (sel){
     sel.innerHTML = "";
-    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["it","Italiano"],["pt","Português"],["tr","Türkçe"],["el","Ελληνικά"],["ru","Русский"],["ko","한국어"],["ja","日本語"]].forEach(([id,name]) => {
+    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["it","Italiano"],["pt","Português"],["tr","Türkçe"],["ru","Русский"],["ko","한국어"],["ja","日本語"]].forEach(([id,name]) => {
       const o = document.createElement("option");
       o.value = id; o.textContent = name; sel.appendChild(o);
     });
