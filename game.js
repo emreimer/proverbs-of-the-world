@@ -302,7 +302,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "40";
+const V = "43";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -323,12 +323,12 @@ let DICT_ENTRIES = {};
 let dictTo = "en";
 let dictOpen = false;
 const POSL = {
-  en:{n:"n.",v:"v.",a:"adj.",d:"adv."},
-  tr:{n:"i.",v:"f.",a:"sf.",d:"zf."},
-  ja:{n:"名",v:"動",a:"形",d:"副"},
-  es:{n:"s.",v:"v.",a:"adj.",d:"adv."},
-  fr:{n:"n.",v:"v.",a:"adj.",d:"adv."},
-  de:{n:"n.",v:"v.",a:"adj.",d:"adv."}
+  en:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"prep."},
+  tr:{n:"i.",v:"f.",a:"sf.",d:"zf.",p:"edat"},
+  ja:{n:"名",v:"動",a:"形",d:"副",p:"助"},
+  es:{n:"s.",v:"v.",a:"adj.",d:"adv.",p:"prep."},
+  fr:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"prép."},
+  de:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"Präp."}
 };
 function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<"); }
 function dictEntries(){
