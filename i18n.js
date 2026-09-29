@@ -6,6 +6,7 @@ let LANG = detectLang();
 let MAPS = {};
 let BGS = {};
 function detectLang(){
+  if (window.__pickedLang && LANGS.includes(window.__pickedLang)) return window.__pickedLang;
   try {
     const saved = localStorage.getItem("potw-lang");
     if (LANGS.includes(saved)) return saved;
