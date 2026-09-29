@@ -218,6 +218,7 @@ function showRound(force){
     b.querySelector('.meta span').textContent = opt.from;
     b.onclick = () => answer(b, opt); box.appendChild(b);
   });
+  if (typeof paintReadings === "function") paintReadings();
   locked = false; document.getElementById('spinBtn').disabled = false; document.getElementById('spinBtn').textContent = t('next');
 }
 function answer(btn, ch){
@@ -302,12 +303,13 @@ function applyI18n(){
   }
   const sel = document.getElementById('langSel');
   if (sel) sel.value = LANG;
+  if (typeof syncStudentBtn === "function") syncStudentBtn();
 }
 document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "62";
+const V = "63";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -326,8 +328,11 @@ window.onLangChange = function(next){
 };
 let DICT_ENTRIES = {};
 let JA_ROMAJI = {};
+let JA_READ = {};
 let dictTo = "en";
 let dictOpen = false;
+let student = false;
+try { student = localStorage.getItem("potw-student") === "1"; } catch (e) {}
 const POSL = {
   en:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"prep."},
   tr:{n:"i.",v:"f.",a:"sf.",d:"zf.",p:"edat"},
@@ -357,8 +362,44 @@ function dictGroups(){
   }
   return groups;
 }
-function withRoma(text, on){
-  const r = on ? JA_ROMAJI[text] : "";
+function lineReading(text){
+  if (LANG === "ko") {
+    if (!/[\uac00-\ud7a3]/.test(text) || typeof koreanRomanize !== "function") return "";
+    return koreanRomanize(text).replace(/[A-Za-z]/, function (ch) { return ch.toUpperCase(); });
+  }
+  if (LANG === "ja") return JA_READ[text] || "";
+  return "";
+}
+function syncStudentBtn(){
+  const b = document.getElementById("studentBtn");
+  if (!b) return;
+  const show = LANG === "ja" || LANG === "ko";
+  b.classList.toggle("hidden", !show);
+  b.classList.toggle("on", !!student);
+  b.textContent = LANG === "ja" ? "学生モード" : "학습 모드";
+  b.setAttribute("aria-pressed", student ? "true" : "false");
+}
+function paintReadings(){
+  const box = document.getElementById("opts");
+  if (!box) return;
+  Array.prototype.forEach.call(box.children, function (el) {
+    const proverb = el.querySelector(".proverb");
+    if (!proverb) return;
+    let read = el.querySelector(".read");
+    const text = (LANG === "ja" || LANG === "ko") && student ? lineReading(proverb.textContent || "") : "";
+    if (!text) { if (read) read.remove(); return; }
+    if (!read) {
+      read = document.createElement("span");
+      read.className = "read";
+      proverb.after(read);
+    }
+    read.textContent = text;
+  });
+}
+function withRoma(text, kind){
+  let r = "";
+  if (kind === "ja") r = JA_ROMAJI[text] || "";
+  else if (kind === "ko" && typeof hangulReading === "function") r = hangulReading(text);
   return esc(text) + (r ? ' <span class="roma">(' + esc(r) + ")</span>" : "");
 }
 function renderDict(){
@@ -386,7 +427,7 @@ function renderDict(){
     const words = group.items.map(e => {
       const word = (e.g && e.g[target]) || "—";
       const pos = labels[e.p] || "";
-      return "<li><b>" + withRoma(e.l, LANG === "ja") + "</b> <span>" + esc(pos) + " — " + withRoma(word, target === "ja") + "</span></li>";
+      return "<li><b>" + withRoma(e.l, LANG === "ja" ? "ja" : LANG === "ko" ? "ko" : "") + "</b> <span>" + esc(pos) + " — " + withRoma(word, target === "ja" ? "ja" : target === "ko" ? "ko" : "") + "</span></li>";
     }).join("");
     return '<li class="dict-group"><p class="dict-proverb">' + esc(group.line) + "</p><ul>" + words + "</ul></li>";
   }).join("");
@@ -397,8 +438,9 @@ Promise.all([
   loadJson("data/factbook.json"),
   loadJson("data/originals.json"),
   loadJson("data/dict-entries.json").catch(() => ({})),
-  loadJson("data/ja-romaji.json").catch(() => ({}))
-]).then(([countries, meta, facts, originals, dictEntries, jaRomaji]) => {
+  loadJson("data/ja-romaji.json").catch(() => ({})),
+  loadJson("data/ja-readings.json").catch(() => ({}))
+]).then(([countries, meta, facts, originals, dictEntries, jaRomaji, jaRead]) => {
   DATA = { countries };
   CENT = meta.cent || {};
   ISO3 = meta.iso3 || {};
@@ -406,6 +448,7 @@ Promise.all([
   ORIG = originals || {};
   DICT_ENTRIES = dictEntries || {};
   JA_ROMAJI = jaRomaji || {};
+  JA_READ = jaRead || {};
   return ensureLang(LANG);
 }).catch(() => {
   DATA = { countries: [] };
@@ -426,5 +469,13 @@ Promise.all([
   if (dictBtn) dictBtn.onclick = () => { dictOpen = !dictOpen; renderDict(); };
   const dictSel = document.getElementById("dictSel");
   if (dictSel) dictSel.onchange = () => { dictTo = dictSel.value; renderDict(); };
+  const studentBtn = document.getElementById("studentBtn");
+  if (studentBtn) studentBtn.onclick = () => {
+    student = !student;
+    try { localStorage.setItem("potw-student", student ? "1" : "0"); } catch (e) {}
+    syncStudentBtn();
+    paintReadings();
+  };
+  syncStudentBtn();
   renderDict();
 });
