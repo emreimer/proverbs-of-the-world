@@ -88,7 +88,7 @@ function fillFacts(iso){
   const blocks = [
     [t("population"), localizeFact(info.population || "")],
     [t("language"), info.language ? localizeFact(info.language) : t("noOfficial")],
-    [t("cities"), cities.join("; ")]
+    [t("cities"), cities.join("\n")]
   ];
   box.innerHTML = blocks.map(([k,v]) => '<div class="fact"><span>' + k + '</span><b>' + String(v).replace(/\n/g, "<br>") + '</b></div>').join("");
 }
