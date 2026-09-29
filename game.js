@@ -189,6 +189,8 @@ function startSpin(){
   document.getElementById('flag').classList.add('hidden');
   document.getElementById('infoBtn').classList.add('hidden');
   const dictBox = document.getElementById('dictBox'); if (dictBox) dictBox.classList.add('hidden');
+  dictOpen = false;
+  if (typeof renderDict === 'function') renderDict();
   document.getElementById('spinBtn').disabled = true;
   if (paintGroup && globeMesh){ globeMesh.remove(paintGroup); paintGroup = null; }
   pendingGeo = null;
