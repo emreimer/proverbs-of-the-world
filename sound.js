@@ -31,7 +31,14 @@ function makeWavUrl(){
   return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
 }
 try{ if(el) el.src=makeWavUrl(); }catch(e){}
-function syncMute(){ const b=document.getElementById('muteBtn'); if(b) b.textContent=muted?'Sound off':'Sound on'; }
+function syncMute(){
+  window.SOUND_MUTED = muted;
+  const b=document.getElementById('muteBtn');
+  if(!b) return;
+  if (typeof t === 'function') b.textContent = muted ? t('soundOff') : t('soundOn');
+  else b.textContent = muted ? 'Sound off' : 'Sound on';
+}
+window.syncMuteLabel = syncMute;
 function getCtx(){
   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null;
   if(!audioCtx){

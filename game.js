@@ -293,8 +293,11 @@ function applyI18n(){
   const country = document.getElementById('country');
   if (country && current) country.textContent = countryLabel(current.country);
   else if (country && country.textContent !== '…') country.textContent = t('quizTitle');
-  const mute = document.getElementById('muteBtn');
-  if (mute) mute.textContent = (window.SOUND_MUTED ? t('soundOff') : t('soundOn'));
+  if (typeof window.syncMuteLabel === "function") window.syncMuteLabel();
+  else {
+    const mute = document.getElementById('muteBtn');
+    if (mute) mute.textContent = (window.SOUND_MUTED ? t('soundOff') : t('soundOn'));
+  }
   const sel = document.getElementById('langSel');
   if (sel) sel.value = LANG;
 }
@@ -302,7 +305,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "44";
+const V = "45";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -349,7 +352,7 @@ function renderDict(){
   const btn = document.getElementById("dictBtn");
   if (btn) btn.textContent = t("dict");
   const sel = document.getElementById("dictSel");
-  const names = {es:"Español",fr:"Français",de:"Deutsch",ja:"日本語",tr:"Türkçe",en:"English"};
+  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",tr:"Türkçe",ja:"日本語"};
   if (sel && document.activeElement !== sel){
     if (dictTo === LANG) dictTo = LANG === "en" ? "tr" : "en";
     sel.innerHTML = "";
@@ -394,7 +397,7 @@ Promise.all([
   const sel = document.getElementById("langSel");
   if (sel){
     sel.innerHTML = "";
-    [["es","Español"],["fr","Français"],["de","Deutsch"],["ja","日本語"],["tr","Türkçe"],["en","English"]].forEach(([id,name]) => {
+    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["tr","Türkçe"],["ja","日本語"]].forEach(([id,name]) => {
       const o = document.createElement("option");
       o.value = id; o.textContent = name; sel.appendChild(o);
     });
