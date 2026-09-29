@@ -319,20 +319,28 @@ window.onLangChange = function(next){
     if (current) showRound(current.country);
   });
 };
-let DICT_INDEX = {};
-let DICT_GLOSS = {};
+let DICT_ENTRIES = {};
 let dictTo = "en";
 let dictOpen = false;
-function dictLemmas(){
-  const table = (DICT_INDEX && DICT_INDEX[LANG]) || {};
+const POSL = {
+  en:{n:"n.",v:"v.",a:"adj.",d:"adv."},
+  tr:{n:"i.",v:"f.",a:"sf.",d:"zf."},
+  ja:{n:"名",v:"動",a:"形",d:"副"},
+  es:{n:"s.",v:"v.",a:"adj.",d:"adv."},
+  fr:{n:"n.",v:"v.",a:"adj.",d:"adv."},
+  de:{n:"n.",v:"v.",a:"adj.",d:"adv."}
+};
+function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<"); }
+function dictEntries(){
+  const table = (DICT_ENTRIES && DICT_ENTRIES[LANG]) || {};
   const seen = {};
   const out = [];
   const lines = (current && current.lines) || [];
   for (let i = 0; i < lines.length; i++){
     const list = table[lines[i]] || [];
     for (let j = 0; j < list.length; j++){
-      const lemma = list[j];
-      if (!seen[lemma]){ seen[lemma] = 1; out.push(lemma); }
+      const e = list[j];
+      if (e && e.l && !seen[e.l]){ seen[e.l] = 1; out.push(e); }
     }
   }
   return out;
@@ -357,11 +365,11 @@ function renderDict(){
   if (!list) return;
   list.classList.toggle("hidden", !dictOpen);
   const target = dictTo === LANG ? (LANG === "en" ? "tr" : "en") : dictTo;
-  const gloss = (DICT_GLOSS && DICT_GLOSS[LANG]) || {};
-  list.innerHTML = dictLemmas().map(lemma => {
-    const row = gloss[lemma] || {};
-    const word = row[target] || "—";
-    return "<li><b></b> <span></span></li>".replace("<b>", "<b>" + lemma.replace(/&/g,"&").replace(/</g,"<")).replace("<span>", "<span>— " + String(word).replace(/&/g,"&").replace(/</g,"<"));
+  const labels = POSL[LANG] || POSL.en;
+  list.innerHTML = dictEntries().map(e => {
+    const word = (e.g && e.g[target]) || "—";
+    const pos = labels[e.p] || "";
+    return "<li><b>" + esc(e.l) + "</b> <span>" + esc(pos) + " — " + esc(word) + "</span></li>";
   }).join("");
 }
 Promise.all([
@@ -369,16 +377,14 @@ Promise.all([
   loadJson("data/meta.json"),
   loadJson("data/factbook.json"),
   loadJson("data/originals.json"),
-  loadJson("data/dict-index.json").catch(() => ({})),
-  loadJson("data/dict-gloss.json").catch(() => ({}))
-]).then(([countries, meta, facts, originals, dictIndex, dictGloss]) => {
+  loadJson("data/dict-entries.json").catch(() => ({}))
+]).then(([countries, meta, facts, originals, dictEntries]) => {
   DATA = { countries };
   CENT = meta.cent || {};
   ISO3 = meta.iso3 || {};
   FACTS = facts || {};
   ORIG = originals || {};
-  DICT_INDEX = dictIndex || {};
-  DICT_GLOSS = dictGloss || {};
+  DICT_ENTRIES = dictEntries || {};
   return ensureLang(LANG);
 }).catch(() => {
   DATA = { countries: [] };
