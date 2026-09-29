@@ -1,7 +1,7 @@
 {
   "name": "Proverbs of the World",
   "short_name": "Proverbs",
-  "start_url": "./index.html",
+  "start_url": "./v64.html?v=64",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000"

@@ -309,15 +309,28 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "63";
+const V = "64";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
+const DICT_LOADED = {};
+function loadDict(lang){
+  if (!lang) return Promise.resolve();
+  if (DICT_LOADED[lang]) return DICT_LOADED[lang];
+  const job = loadJson("data/dict-" + lang + ".json").then(table => {
+    DICT_ENTRIES[lang] = table || {};
+    if (typeof renderDict === "function") renderDict();
+  }).catch(() => { delete DICT_LOADED[lang]; });
+  DICT_LOADED[lang] = job;
+  return job;
+}
 function ensureLang(lang){
-  if (!lang || lang === "en") return Promise.resolve();
-  const jobs = [];
-  if (!MAPS[lang]) jobs.push(loadJson("data/map-" + lang + ".json").then(d => { MAPS[lang] = d; }));
-  if (!BGS[lang]) jobs.push(loadJson("data/bg-" + lang + ".json").then(d => { BGS[lang] = d; }));
+  if (!lang) return Promise.resolve();
+  const jobs = [loadDict(lang)];
+  if (lang !== "en") {
+    if (!MAPS[lang]) jobs.push(loadJson("data/map-" + lang + ".json").then(d => { MAPS[lang] = d; }));
+    if (!BGS[lang]) jobs.push(loadJson("data/bg-" + lang + ".json").then(d => { BGS[lang] = d; }).catch(() => { BGS[lang] = {}; }));
+  }
   return Promise.all(jobs);
 }
 window.onLangChange = function(next){
@@ -437,16 +450,14 @@ Promise.all([
   loadJson("data/meta.json"),
   loadJson("data/factbook.json"),
   loadJson("data/originals.json"),
-  loadJson("data/dict-entries.json").catch(() => ({})),
   loadJson("data/ja-romaji.json").catch(() => ({})),
   loadJson("data/ja-readings.json").catch(() => ({}))
-]).then(([countries, meta, facts, originals, dictEntries, jaRomaji, jaRead]) => {
+]).then(([countries, meta, facts, originals, jaRomaji, jaRead]) => {
   DATA = { countries };
   CENT = meta.cent || {};
   ISO3 = meta.iso3 || {};
   FACTS = facts || {};
   ORIG = originals || {};
-  DICT_ENTRIES = dictEntries || {};
   JA_ROMAJI = jaRomaji || {};
   JA_READ = jaRead || {};
   return ensureLang(LANG);
