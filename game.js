@@ -309,7 +309,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "64";
+const V = "65";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -356,7 +356,8 @@ const POSL = {
   it:{n:"s.",v:"v.",a:"agg.",d:"avv.",p:"prep."},
   ko:{n:"명",v:"동",a:"형",d:"부",p:"조"},
   ru:{n:"сущ.",v:"гл.",a:"прил.",d:"нар.",p:"предл."},
-  el:{n:"ουσ.",v:"ρ.",a:"επίθ.",d:"επίρ.",p:"πρόθ."}
+  el:{n:"ουσ.",v:"ρ.",a:"επίθ.",d:"επίρ.",p:"πρόθ."},
+  pt:{n:"s.",v:"v.",a:"adj.",d:"adv.",p:"prep."}
 };
 function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<"); }
 function dictGroups(){
@@ -389,7 +390,7 @@ function syncStudentBtn(){
   const show = LANG === "ja" || LANG === "ko";
   b.classList.toggle("hidden", !show);
   b.classList.toggle("on", !!student);
-  b.textContent = LANG === "ja" ? "学生モード" : "학습 모드";
+  b.textContent = "Student Mode - Latin harfleriyle yazım";
   b.setAttribute("aria-pressed", student ? "true" : "false");
 }
 function paintReadings(){
@@ -419,7 +420,7 @@ function renderDict(){
   const btn = document.getElementById("dictBtn");
   if (btn) btn.textContent = t("dict");
   const sel = document.getElementById("dictSel");
-  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",it:"Italiano",tr:"Türkçe",el:"Ελληνικά",ru:"Русский",ko:"한국어",ja:"日本語"};
+  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",it:"Italiano",pt:"Português",tr:"Türkçe",el:"Ελληνικά",ru:"Русский",ko:"한국어",ja:"日本語"};
   if (sel && document.activeElement !== sel){
     if (dictTo === LANG) dictTo = LANG === "en" ? "tr" : "en";
     sel.innerHTML = "";
@@ -469,7 +470,7 @@ Promise.all([
   const sel = document.getElementById("langSel");
   if (sel){
     sel.innerHTML = "";
-    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["it","Italiano"],["tr","Türkçe"],["el","Ελληνικά"],["ru","Русский"],["ko","한국어"],["ja","日本語"]].forEach(([id,name]) => {
+    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["it","Italiano"],["pt","Português"],["tr","Türkçe"],["el","Ελληνικά"],["ru","Русский"],["ko","한국어"],["ja","日本語"]].forEach(([id,name]) => {
       const o = document.createElement("option");
       o.value = id; o.textContent = name; sel.appendChild(o);
     });
