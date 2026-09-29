@@ -335,19 +335,21 @@ const POSL = {
   de:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"Präp."}
 };
 function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<"); }
-function dictEntries(){
+function dictGroups(){
   const table = (DICT_ENTRIES && DICT_ENTRIES[LANG]) || {};
-  const seen = {};
-  const out = [];
   const lines = (current && current.lines) || [];
+  const groups = [];
   for (let i = 0; i < lines.length; i++){
+    const seen = {};
+    const items = [];
     const list = table[lines[i]] || [];
     for (let j = 0; j < list.length; j++){
       const e = list[j];
-      if (e && e.l && !seen[e.l]){ seen[e.l] = 1; out.push(e); }
+      if (e && e.l && !seen[e.l]){ seen[e.l] = 1; items.push(e); }
     }
+    if (items.length) groups.push({ line: lines[i], items: items });
   }
-  return out;
+  return groups;
 }
 function withRoma(text, on){
   const r = on ? JA_ROMAJI[text] : "";
@@ -374,10 +376,13 @@ function renderDict(){
   list.classList.toggle("hidden", !dictOpen);
   const target = dictTo === LANG ? (LANG === "en" ? "tr" : "en") : dictTo;
   const labels = POSL[LANG] || POSL.en;
-  list.innerHTML = dictEntries().map(e => {
-    const word = (e.g && e.g[target]) || "—";
-    const pos = labels[e.p] || "";
-    return "<li><b>" + withRoma(e.l, LANG === "ja") + "</b> <span>" + esc(pos) + " — " + withRoma(word, target === "ja") + "</span></li>";
+  list.innerHTML = dictGroups().map(group => {
+    const words = group.items.map(e => {
+      const word = (e.g && e.g[target]) || "—";
+      const pos = labels[e.p] || "";
+      return "<li><b>" + withRoma(e.l, LANG === "ja") + "</b> <span>" + esc(pos) + " — " + withRoma(word, target === "ja") + "</span></li>";
+    }).join("");
+    return '<li class="dict-group"><p class="dict-proverb">' + esc(group.line) + "</p><ul>" + words + "</ul></li>";
   }).join("");
 }
 Promise.all([
