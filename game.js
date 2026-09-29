@@ -227,7 +227,7 @@ function answer(btn, ch){
     if (el.querySelector('.proverb').textContent === current.correct) el.classList.add('correct');
   });
   if (ch.ok){ btn.classList.add('correct'); score += 10; streak++; document.getElementById('result').textContent = t('correct'); }
-  else { btn.classList.add('wrong'); streak = 0; document.getElementById('result').textContent = t('wrong').replace('{country}', (LANG === 'tr' && typeof trAblative === 'function') ? trAblative(ch.from) : ch.from); }
+  else { btn.classList.add('wrong'); streak = 0; var origin = (LANG === 'tr' && typeof trAblative === 'function') ? trAblative(ch.from) : (typeof proverbOrigin === 'function' ? proverbOrigin(ch.iso, ch.from) : ch.from); document.getElementById('result').textContent = t('wrong').replace('{country}', origin); }
   document.getElementById('score').textContent = score; document.getElementById('streak').textContent = streak;
 }
 function openCountryPage(){
@@ -307,7 +307,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "59";
+const V = "61";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -334,7 +334,11 @@ const POSL = {
   ja:{n:"名",v:"動",a:"形",d:"副",p:"助"},
   es:{n:"s.",v:"v.",a:"adj.",d:"adv.",p:"prep."},
   fr:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"prép."},
-  de:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"Präp."}
+  de:{n:"n.",v:"v.",a:"adj.",d:"adv.",p:"Präp."},
+  it:{n:"s.",v:"v.",a:"agg.",d:"avv.",p:"prep."},
+  ko:{n:"명",v:"동",a:"형",d:"부",p:"조"},
+  ru:{n:"сущ.",v:"гл.",a:"прил.",d:"нар.",p:"предл."},
+  el:{n:"ουσ.",v:"ρ.",a:"επίθ.",d:"επίρ.",p:"πρόθ."}
 };
 function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<"); }
 function dictGroups(){
@@ -361,7 +365,7 @@ function renderDict(){
   const btn = document.getElementById("dictBtn");
   if (btn) btn.textContent = t("dict");
   const sel = document.getElementById("dictSel");
-  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",tr:"Türkçe",ja:"日本語"};
+  const names = {de:"Deutsch",en:"English",es:"Español",fr:"Français",it:"Italiano",tr:"Türkçe",el:"Ελληνικά",ru:"Русский",ko:"한국어",ja:"日本語"};
   if (sel && document.activeElement !== sel){
     if (dictTo === LANG) dictTo = LANG === "en" ? "tr" : "en";
     sel.innerHTML = "";
@@ -411,7 +415,7 @@ Promise.all([
   const sel = document.getElementById("langSel");
   if (sel){
     sel.innerHTML = "";
-    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["tr","Türkçe"],["ja","日本語"]].forEach(([id,name]) => {
+    [["de","Deutsch"],["en","English"],["es","Español"],["fr","Français"],["it","Italiano"],["tr","Türkçe"],["el","Ελληνικά"],["ru","Русский"],["ko","한국어"],["ja","日本語"]].forEach(([id,name]) => {
       const o = document.createElement("option");
       o.value = id; o.textContent = name; sel.appendChild(o);
     });
