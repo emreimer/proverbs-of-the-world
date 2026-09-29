@@ -225,7 +225,7 @@ function answer(btn, ch){
     if (el.querySelector('.proverb').textContent === current.correct) el.classList.add('correct');
   });
   if (ch.ok){ btn.classList.add('correct'); score += 10; streak++; document.getElementById('result').textContent = t('correct'); }
-  else { btn.classList.add('wrong'); streak = 0; document.getElementById('result').textContent = t('wrong').replace('{country}', ch.from); }
+  else { btn.classList.add('wrong'); streak = 0; document.getElementById('result').textContent = t('wrong').replace('{country}', (LANG === 'tr' && typeof trAblative === 'function') ? trAblative(ch.from) : ch.from); }
   document.getElementById('score').textContent = score; document.getElementById('streak').textContent = streak;
 }
 function openCountryPage(){
