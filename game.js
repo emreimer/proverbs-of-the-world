@@ -305,7 +305,7 @@ document.getElementById('spinBtn').onclick = startSpin;
 document.getElementById('backBtn').onclick = () => document.getElementById('page').classList.remove('open');
 document.getElementById('infoBtn').onclick = e => { e.stopPropagation(); openCountryPage(); };
 document.getElementById('countryRow').onclick = openCountryPage;
-const V = "46";
+const V = "54";
 function loadJson(path){
   return fetch(path + "?v=" + V).then(r => { if (!r.ok) throw 0; return r.json(); });
 }
@@ -323,6 +323,7 @@ window.onLangChange = function(next){
   });
 };
 let DICT_ENTRIES = {};
+let JA_ROMAJI = {};
 let dictTo = "en";
 let dictOpen = false;
 const POSL = {
@@ -348,6 +349,10 @@ function dictEntries(){
   }
   return out;
 }
+function withRoma(text, on){
+  const r = on ? JA_ROMAJI[text] : "";
+  return esc(text) + (r ? ' <span class="roma">(' + esc(r) + ")</span>" : "");
+}
 function renderDict(){
   const btn = document.getElementById("dictBtn");
   if (btn) btn.textContent = t("dict");
@@ -372,7 +377,7 @@ function renderDict(){
   list.innerHTML = dictEntries().map(e => {
     const word = (e.g && e.g[target]) || "—";
     const pos = labels[e.p] || "";
-    return "<li><b>" + esc(e.l) + "</b> <span>" + esc(pos) + " — " + esc(word) + "</span></li>";
+    return "<li><b>" + withRoma(e.l, LANG === "ja") + "</b> <span>" + esc(pos) + " — " + withRoma(word, target === "ja") + "</span></li>";
   }).join("");
 }
 Promise.all([
@@ -380,14 +385,16 @@ Promise.all([
   loadJson("data/meta.json"),
   loadJson("data/factbook.json"),
   loadJson("data/originals.json"),
-  loadJson("data/dict-entries.json").catch(() => ({}))
-]).then(([countries, meta, facts, originals, dictEntries]) => {
+  loadJson("data/dict-entries.json").catch(() => ({})),
+  loadJson("data/ja-romaji.json").catch(() => ({}))
+]).then(([countries, meta, facts, originals, dictEntries, jaRomaji]) => {
   DATA = { countries };
   CENT = meta.cent || {};
   ISO3 = meta.iso3 || {};
   FACTS = facts || {};
   ORIG = originals || {};
   DICT_ENTRIES = dictEntries || {};
+  JA_ROMAJI = jaRomaji || {};
   return ensureLang(LANG);
 }).catch(() => {
   DATA = { countries: [] };
