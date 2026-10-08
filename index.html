@@ -1,13 +1,44 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta http-equiv="refresh" content="0;url=v72.html?v=72"/>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<title>Proverbs Quiz</title>
-<script>location.replace('v72.html?v=72');</script>
-</head>
-<body>
-<p><a href="v72.html?v=72">Proverbs Quiz</a></p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <style>
+      html, body, #root { margin: 0; background: #000; min-height: 100%; }
+    </style>
+    <meta name="theme-color" content="#000000" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta name="color-scheme" content="dark" />
+    <title>Proverbs of the World</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <script>
+      (function () {
+        function device() {
+          var ua = navigator.userAgent || "";
+          var touchMac = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+          var pad = /iPad/.test(ua) || touchMac;
+          var phone = /iPhone|iPod/.test(ua);
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          var fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+          var kind = "iphone";
+          if (phone) kind = "iphone";
+          else if (pad) kind = "ipad";
+          else if (fine && w >= 1000) kind = "mac";
+          else if (Math.min(w, h) >= 744) kind = "ipad";
+          else if (w >= 1100) kind = "mac";
+          document.documentElement.dataset.device = kind;
+          document.documentElement.dataset.orient = w > h ? "land" : "port";
+        }
+        device();
+        window.addEventListener("resize", device);
+        window.addEventListener("orientationchange", device);
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-840S-v14.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BlvU3zQN.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

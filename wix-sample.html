@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proverbs of the World</title>
+    <style>
+      :root {
+        --bg: #000;
+        --surface: #0e1622;
+        --fg: #f4efe6;
+        --muted: #9eb0c4;
+        --gold: #e6c56a;
+        --ink: #1a1305;
+        --line: rgba(255, 255, 255, 0.12);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: Georgia, "Iowan Old Style", Palatino, serif;
+      }
+      a { color: inherit; text-decoration: none; }
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 7vw;
+        background: rgba(0, 0, 0, 0.9);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand { letter-spacing: 0.08em; font-size: 14px; }
+      .nav-links { display: flex; gap: 18px; align-items: center; font-family: system-ui, sans-serif; font-size: 14px; color: var(--muted); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid var(--gold);
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .btn.solid { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+      .btn.ghost { color: var(--gold); background: transparent; }
+      .hero img { display: block; width: 100%; height: auto; }
+      .wrap { width: min(1080px, calc(100% - 12vw)); margin: 0 auto; }
+      section { padding: 72px 0; }
+      h1, h2 { font-weight: 500; letter-spacing: 0.01em; margin: 0; }
+      h1 { font-size: clamp(40px, 6vw, 72px); line-height: 0.95; }
+      h2 { font-size: clamp(32px, 4vw, 48px); }
+      .gold { color: var(--gold); }
+      .sans { font-family: system-ui, sans-serif; }
+      .muted { color: var(--muted); }
+      .lead { font-family: system-ui, sans-serif; font-size: 18px; line-height: 1.5; color: var(--muted); max-width: 38rem; }
+      .price { font-size: clamp(28px, 4vw, 42px); color: var(--gold); margin: 18px 0; }
+      .row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+      .card, form {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 22px;
+      }
+      .card h3 { margin: 0 0 8px; font-size: 22px; }
+      .card p, form p, li { font-family: system-ui, sans-serif; line-height: 1.45; }
+      .steps { counter-reset: step; }
+      .steps .card h3::before {
+        counter-increment: step;
+        content: counter(step);
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+        border-radius: 50%;
+        background: var(--gold);
+        color: var(--ink);
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+      }
+      .split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; align-items: start; }
+      label { display: block; font-family: system-ui, sans-serif; font-size: 13px; margin-top: 12px; }
+      input, textarea, select {
+        width: 100%;
+        margin-top: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #000;
+        color: var(--fg);
+        padding: 12px;
+        font: 15px system-ui, sans-serif;
+      }
+      textarea { min-height: 90px; resize: vertical; }
+      .buy {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+        padding: 28px;
+        border: 1px solid var(--gold);
+        border-radius: 28px;
+      }
+      footer { padding: 28px 7vw 48px; color: var(--muted); font-family: system-ui, sans-serif; font-size: 13px; }
+      #thanks { display: none; }
+      @media (max-width: 800px) {
+        .grid, .split, .buy { grid-template-columns: 1fr; display: grid; }
+        .nav-links a:not(.btn) { display: none; }
+        section { padding: 48px 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="#top">PROVERBS OF THE WORLD</a>
+      <nav class="nav-links">
+        <a href="#oyun">Oyun</a>
+        <a href="#nasil">Nasıl</a>
+        <a href="#kurum">Kurum</a>
+        <a class="btn solid" href="#satin">Satın al · 3.99 USD</a>
+      </nav>
+    </header>
+
+    <div id="top" class="hero">
+      <img src="/wix-banner.jpg" alt="Proverbs of the World" />
+    </div>
+
+    <section>
+      <div class="wrap">
+        <p class="sans gold" style="letter-spacing: 0.16em; font-size: 13px;">PROVERBS QUIZ</p>
+        <h1 style="margin-top: 10px;">Atasözünün ülkesini bil.</h1>
+        <p class="lead">Dünyadan bir atasözü görürsün. Ülkesini seçersin. Sözün içindeki kelimeleri de, kendi dilinde, sözlükten okursun.</p>
+        <p class="price">3.99 USD</p>
+        <p class="sans muted">Tek sefer. Kişiye özel kod. En fazla 3 cihaz.</p>
+        <div class="row">
+          <a class="btn solid" href="#satin">Kodu satın al</a>
+          <a class="btn ghost" href="#kurum">Kurumsal teklif iste</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="oyun">
+      <div class="wrap">
+        <h2>Oyunda ne var</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Ülkeyi bul</h3>
+            <p class="muted">Bir atasözü çıkar. Doğru ülkeyi seçersin. Haritada o ülke görünür.</p>
+          </article>
+          <article class="card">
+            <h3>Sözlük</h3>
+            <p class="muted">Cümledeki kelimelerin anlamı, oyunun dilinde açılır. On dil var.</p>
+          </article>
+          <article class="card">
+            <h3>Senin kodun</h3>
+            <p class="muted">Kod yalnızca senindir. Üç cihazda açılır. Başkasına devredilmez.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="nasil">
+      <div class="wrap">
+        <h2>Nasıl alınır</h2>
+        <div class="grid steps">
+          <article class="card">
+            <h3>Öde</h3>
+            <p class="muted">3.99 USD. Fatura bilgin ödeme sayfasında kalır.</p>
+          </article>
+          <article class="card">
+            <h3>Kodu gör</h3>
+            <p class="muted">Kod bu sitede senin sayfana düşer. Mailine de gider.</p>
+          </article>
+          <article class="card">
+            <h3>Oyna</h3>
+            <p class="muted">Kodu oyuna bir kez yazarsın. O cihaz bir daha sormaz.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="satin">
+      <div class="wrap">
+        <div class="buy">
+          <div>
+            <h2>Kişisel kod</h2>
+            <p class="lead">Bir kişi, bir kod, üç cihaz. Başka bir ücret yok.</p>
+          </div>
+          <div>
+            <p class="price" style="margin-top: 0;">3.99 USD</p>
+            <a class="btn solid" href="#satin-al">Satın al</a>
+          </div>
+        </div>
+        <p id="satin-al" class="sans muted" style="margin-top: 14px;">Wix’te bu düğmeyi kendi ödeme sayfana bağla.</p>
+      </div>
+    </section>
+
+    <section id="kurum">
+      <div class="wrap split">
+        <div>
+          <h2>Okul ve kurum</h2>
+          <p class="lead">Çok sayıda kod gerekiyorsa teklif iste. Kodlar toplu üretilir. Her kod yine üç cihazda açılır.</p>
+          <ul class="muted">
+            <li>Sınıf, okul ya da şirket</li>
+            <li>İstediğin adet</li>
+            <li>Tek liste, tek fatura</li>
+          </ul>
+        </div>
+        <form id="quote">
+          <h3 style="margin: 0;">Teklif iste</h3>
+          <label>Ad soyad<input name="name" required /></label>
+          <label>Kurum<input name="company" required /></label>
+          <label>Mail<input name="email" type="email" required /></label>
+          <label>Ülke<input name="country" required /></label>
+          <label>Kaç kod
+            <select name="count">
+              <option>25</option>
+              <option>50</option>
+              <option selected>100</option>
+              <option>250</option>
+            </select>
+          </label>
+          <label>Not<textarea name="note"></textarea></label>
+          <button class="btn solid" style="margin-top: 16px; width: 100%;" type="submit">Teklif iste</button>
+          <p id="thanks" class="gold">Bu örnek sayfadır. Wix’te bu formu kendi gelen kutuna bağla.</p>
+        </form>
+      </div>
+    </section>
+
+    <footer>Proverbs of the World · Kişiye özel kod · 3 cihaz · 3.99 USD</footer>
+    <script>
+      document.getElementById("quote").addEventListener("submit", function (event) {
+        event.preventDefault();
+        document.getElementById("thanks").style.display = "block";
+      });
+    </script>
+  </body>
+</html>
